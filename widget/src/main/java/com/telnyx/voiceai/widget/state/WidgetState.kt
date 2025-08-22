@@ -1,13 +1,19 @@
 package com.telnyx.voiceai.widget.state
 
-import com.telnyx.voiceai.widget.data.WidgetSettings
+import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
  * Represents the different states of the AI Assistant Widget
  */
 sealed class WidgetState {
+
     /**
-     * Initial loading state while fetching widget settings
+     * Initial state before initialization
+     */
+    object Idle : WidgetState()
+
+    /**
+     * Loading state while initiating the call
      */
     object Loading : WidgetState()
     
@@ -49,7 +55,8 @@ sealed class WidgetState {
      * Error state
      */
     data class Error(
-        val message: String
+        val message: String,
+        val type: ErrorType
     ) : WidgetState()
 }
 
@@ -77,3 +84,9 @@ data class TranscriptItem(
     val isUser: Boolean,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+enum class ErrorType {
+    Initialization,
+    Connection,
+    Other
+}

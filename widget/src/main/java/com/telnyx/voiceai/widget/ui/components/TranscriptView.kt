@@ -1,6 +1,5 @@
 package com.telnyx.voiceai.widget.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,14 +13,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.telnyx.voiceai.widget.data.WidgetSettings
+import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
+import com.telnyx.webrtc.sdk.model.WidgetSettings
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +35,7 @@ fun TranscriptView(
     isConnected: Boolean,
     isMuted: Boolean,
     agentStatus: AgentStatus,
+    audioLevels: List<Float>,
     onUserInputChange: (String) -> Unit,
     onSendMessage: () -> Unit,
     onToggleMute: () -> Unit,
@@ -71,6 +71,7 @@ fun TranscriptView(
                 isMuted = isMuted,
                 agentStatus = agentStatus,
                 settings = settings,
+                audioLevels = audioLevels,
                 onToggleMute = onToggleMute,
                 onEndCall = onEndCall,
                 onCollapse = onCollapse
@@ -118,6 +119,7 @@ private fun TranscriptHeader(
     isMuted: Boolean,
     agentStatus: AgentStatus,
     settings: WidgetSettings,
+    audioLevels: List<Float>,
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
@@ -134,7 +136,7 @@ private fun TranscriptHeader(
         IconButton(onClick = onCollapse) {
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Collapse",
+                contentDescription = stringResource(R.string.collapse_button_description),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -145,18 +147,18 @@ private fun TranscriptHeader(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             AudioVisualizer(
+                audioLevels,
                 modifier = Modifier
                     .width(80.dp)
                     .height(24.dp),
                 isActive = isConnected && agentStatus == AgentStatus.Waiting,
-                color = MaterialTheme.colorScheme.primary,
-                barCount = 3
+                color = MaterialTheme.colorScheme.primary
             )
             
             Text(
                 text = when (agentStatus) {
-                    AgentStatus.Thinking -> settings.agentThinkingText ?: "Agent is thinking..."
-                    AgentStatus.Waiting -> settings.speakToInterruptText ?: "Speak to interrupt"
+                    AgentStatus.Thinking -> settings.agentThinkingText ?: stringResource(R.string.default_agent_thinking_text)
+                    AgentStatus.Waiting -> settings.speakToInterruptText ?: stringResource(R.string.default_speak_to_interrupt_text)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -171,7 +173,7 @@ private fun TranscriptHeader(
             IconButton(onClick = onToggleMute) {
                 Icon(
                     imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = if (isMuted) "Unmute" else "Mute",
+                    contentDescription = if (isMuted) stringResource(R.string.unmute_button_description) else stringResource(R.string.mute_button_description),
                     tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
@@ -179,7 +181,7 @@ private fun TranscriptHeader(
             IconButton(onClick = onEndCall) {
                 Icon(
                     imageVector = Icons.Default.CallEnd,
-                    contentDescription = "End Call",
+                    contentDescription = stringResource(R.string.end_call_button_description),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -284,7 +286,7 @@ private fun MessageInput(
             modifier = Modifier.weight(1f),
             placeholder = {
                 Text(
-                    text = if (enabled) "Type a message..." else "Not connected",
+                    text = if (enabled) stringResource(R.string.message_input_placeholder) else stringResource(R.string.message_input_disconnected),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -301,7 +303,7 @@ private fun MessageInput(
         ) {
             Icon(
                 imageVector = Icons.Default.Send,
-                contentDescription = "Send",
+                contentDescription = stringResource(R.string.send_button_description),
                 tint = if (enabled && value.trim().isNotEmpty()) {
                     MaterialTheme.colorScheme.primary
                 } else {

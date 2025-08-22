@@ -1,6 +1,5 @@
 package com.telnyx.voiceai.widget.ui.components
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -13,38 +12,23 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
-import kotlin.math.sin
-import kotlin.random.Random
 
 /**
- * Audio visualizer component that shows animated bars representing audio levels
+ * Audio visualizer component that shows bars representing audio levels
+ * @param audioLevels List of 10 Float values (0.0-1.0) representing audio levels for each bar
  */
 @Composable
 fun AudioVisualizer(
+    audioLevels: List<Float>,
     modifier: Modifier = Modifier,
     isActive: Boolean = true,
-    color: Color = MaterialTheme.colorScheme.primary,
-    barCount: Int = 5
+    color: Color = MaterialTheme.colorScheme.primary
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "audio_visualizer")
-    
-    // Create animated values for each bar
-    val animatedValues = remember(barCount) {
-        (0 until barCount).map { index ->
-            infiniteTransition.animateFloat(
-                initialValue = 0.2f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(
-                        durationMillis = 800 + (index * 100),
-                        easing = FastOutSlowInEasing
-                    ),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "bar_$index"
-            )
-        }
-    }
+    // Ensure we always have exactly 10 values, padding with 0.0f if needed
+    val normalizedAudioLevels = when {
+        audioLevels.size >= 10 -> audioLevels.take(10)
+        else -> audioLevels + List(10 - audioLevels.size) { 0.0f }
+    }.map { it.coerceIn(0.0f, 1.0f) } // Ensure values are in 0.0-1.0 range
     
     Box(
         modifier = modifier.height(40.dp),
@@ -55,16 +39,14 @@ fun AudioVisualizer(
         ) {
             if (isActive) {
                 drawAudioBars(
-                    animatedValues = animatedValues.map { it.value },
-                    color = color,
-                    barCount = barCount
+                    audioValues = normalizedAudioLevels,
+                    color = color
                 )
             } else {
                 // Draw static bars when not active
                 drawAudioBars(
-                    animatedValues = List(barCount) { 0.3f },
-                    color = color.copy(alpha = 0.3f),
-                    barCount = barCount
+                    audioValues = List(10) { 0.3f },
+                    color = color.copy(alpha = 0.3f)
                 )
             }
         }
@@ -72,16 +54,16 @@ fun AudioVisualizer(
 }
 
 private fun DrawScope.drawAudioBars(
-    animatedValues: List<Float>,
-    color: Color,
-    barCount: Int
+    audioValues: List<Float>,
+    color: Color
 ) {
+    val barCount = 10 // Fixed to 10 bars
     val barWidth = size.width / (barCount * 2 - 1) // Account for spacing
     val maxBarHeight = size.height * 0.8f
     val minBarHeight = size.height * 0.2f
     
-    animatedValues.forEachIndexed { index, animatedValue ->
-        val barHeight = minBarHeight + (maxBarHeight - minBarHeight) * animatedValue
+    audioValues.forEachIndexed { index, audioValue ->
+        val barHeight = minBarHeight + (maxBarHeight - minBarHeight) * audioValue
         val x = index * barWidth * 2
         val y = (size.height - barHeight) / 2
         

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget Button -->
+    <string name="widget_logo_content_description">Widget Logo</string>
+    <string name="ai_assistant_content_description">AI Assistant</string>
+    <string name="default_start_call_text">Let\'s chat</string>
+    
+    <!-- Agent Status -->
+    <string name="default_agent_thinking_text">Agent is thinking…</string>
+    <string name="default_speak_to_interrupt_text">Speak to interrupt</string>
+    
+    <!-- Controls -->
+    <string name="mute_button_description">Mute</string>
+    <string name="unmute_button_description">Unmute</string>
+    <string name="end_call_button_description">End Call</string>
+    <string name="collapse_button_description">Collapse</string>
+    <string name="send_button_description">Send</string>
+    
+    <!-- Message Input -->
+    <string name="message_input_placeholder">Type a message…</string>
+    <string name="message_input_disconnected">Not connected</string>
+    
+    <!-- Error Dialog -->
+    <string name="error_title">An error occurred</string>
+    <string name="error_initialization_message">Failed to initialize the Telnyx AI Agent client. Please check your agent ID and ensure that you are connected to the internet.</string>
+    <string name="error_settings_link_text">Support Unauthenticated Web Calls</string>
+    <string name="error_settings_instruction">Make sure that the %s option is enabled in your Telnyx agent settings.</string>
+    <string name="error_connection_prefix">Connection error: %s</string>
+    <string name="error_other_prefix">Error: %s</string>
+    <string name="retry_button">Retry</string>
+</resources>

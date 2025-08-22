@@ -1,25 +1,26 @@
 package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.telnyx.voiceai.widget.data.WidgetSettings
+import com.telnyx.voiceai.widget.R
+import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
+import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
  * Collapsed widget button component
@@ -54,26 +55,37 @@ fun WidgetButton(
                         .data(settings.logoIconUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = "Widget Logo",
+                    contentDescription = stringResource(R.string.widget_logo_content_description),
                     modifier = Modifier.size(32.dp),
                     contentScale = ContentScale.Fit
                 )
             } else {
-                Icon(
-                    imageVector = Icons.Default.SmartToy,
-                    contentDescription = "AI Assistant",
+                Image(
+                    painter = painterResource(R.drawable.default_avatar),
+                    contentDescription = stringResource(R.string.ai_assistant_content_description),
                     modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                 )
             }
             
             // Start call text
             Text(
-                text = settings.startCallText ?: "Let's chat",
+                text = if (settings.startCallText?.isNullOrEmpty() == false ) settings.startCallText!! else stringResource(R.string.default_start_call_text),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+@Preview
+@Composable
+fun WidgetButtonPreview() {
+    VoiceAIWidgetTheme(darkTheme = false) {
+        WidgetButton(
+            settings = WidgetSettings(),
+            onClick = {}
+        )
     }
 }

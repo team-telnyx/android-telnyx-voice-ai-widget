@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.telnyx.voiceai.example.ui.theme.VoiceAIWidgetExampleTheme
 import com.telnyx.voiceai.widget.AIAssistantWidget
@@ -34,14 +35,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ExampleApp() {
     var assistantId by remember { mutableStateOf("demo-assistant-id") }
-    var darkTheme by remember { mutableStateOf(false) }
+    var showAlertDialog by remember { mutableStateOf(false) }
+    var showWidget by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "AI Assistant Widget Example",
+                        text = stringResource(R.string.top_app_bar_title),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -53,50 +55,57 @@ fun ExampleApp() {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Configuration section
-            Card(
+            // Assistant ID field
+            OutlinedTextField(
+                value = assistantId,
+                onValueChange = { assistantId = it },
+                label = { Text(stringResource(R.string.assistant_id_label)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Configuration",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    OutlinedTextField(
-                        value = assistantId,
-                        onValueChange = { assistantId = it },
-                        label = { Text("Assistant ID") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Dark Theme",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        
-                        Switch(
-                            checked = darkTheme,
-                            onCheckedChange = { darkTheme = it }
-                        )
+                    .padding(horizontal = 16.dp),
+                singleLine = true
+            )
+
+            // Create Widget button
+            Button(
+                onClick = {
+                    if (assistantId.trim().isEmpty()) {
+                        showAlertDialog = true
+                    } else {
+                        showWidget = true
                     }
-                }
+                },
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(stringResource(R.string.create_widget_button))
             }
-            
+
+            // Widget demo section and actual widget - only show when widget is initialized
+            if (showWidget) {
+                Text(
+                    text = stringResource(R.string.widget_demo_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+            }
+            // The actual widget
+            AIAssistantWidget(
+                assistantId = assistantId,
+                shouldInitialize = showWidget,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
             // Instructions section
             Card(
                 modifier = Modifier
@@ -108,45 +117,39 @@ fun ExampleApp() {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "How to Use",
+                        text = stringResource(R.string.how_to_use_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     
                     Text(
-                        text = """
-                        1. Tap the widget button below to start a call
-                        2. The widget will expand showing audio visualizer and controls
-                        3. Tap the expanded widget to open the full transcript view
-                        4. Use the mute button to toggle microphone
-                        5. Use the end call button to terminate the session
-                        """.trimIndent(),
+                        text = stringResource(R.string.instructions_text),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             
-            // Widget demo section
-            Text(
-                text = "AI Assistant Widget Demo",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
-            
-            // The actual widget
-            AIAssistantWidget(
-                assistantId = assistantId,
-                darkTheme = darkTheme,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
             // Spacer for bottom padding
             Spacer(modifier = Modifier.height(32.dp))
+        }
+        
+        // Alert Dialog
+        if (showAlertDialog) {
+            AlertDialog(
+                onDismissRequest = { showAlertDialog = false },
+                title = null,
+                text = {
+                    Text(text = stringResource(R.string.alert_empty_assistant_id))
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { showAlertDialog = false }
+                    ) {
+                        Text(stringResource(R.string.alert_ok_button))
+                    }
+                }
+            )
         }
     }
 }

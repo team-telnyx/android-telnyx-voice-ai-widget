@@ -1,46 +1,90 @@
 package com.telnyx.voiceai.widget.viewmodel
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.telnyx.voiceai.widget.data.WidgetSettings
 import com.telnyx.voiceai.widget.state.AgentStatus
+import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.voiceai.widget.state.WidgetState
+import com.telnyx.webrtc.sdk.Call
+import com.telnyx.webrtc.sdk.TelnyxClient
+import com.telnyx.webrtc.sdk.model.LogLevel
+import com.telnyx.webrtc.sdk.model.SocketError
+import com.telnyx.webrtc.sdk.model.SocketMethod
+import com.telnyx.webrtc.sdk.model.SocketStatus
+import com.telnyx.webrtc.sdk.model.WidgetSettings
+import com.telnyx.webrtc.sdk.stats.CallQualityMetrics
+import com.telnyx.webrtc.sdk.verto.receive.AiConversationResponse
+import com.telnyx.webrtc.sdk.verto.receive.ReceivedMessageBody
+import com.telnyx.webrtc.sdk.verto.receive.SocketResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel for managing the AI Assistant Widget state and interactions
  */
 class WidgetViewModel : ViewModel() {
-    
-    private val _widgetState = MutableStateFlow<WidgetState>(WidgetState.Loading)
+
+    private val AI_ASSISTANT_DESTINATION = "ai-assistant"
+    private val MAX_LEVELS = 20
+
+    private val _widgetState = MutableStateFlow<WidgetState>(WidgetState.Idle)
     val widgetState: StateFlow<WidgetState> = _widgetState.asStateFlow()
-    
+
+    private val _widgetSettings = MutableStateFlow<WidgetSettings>(WidgetSettings())
+    val widgetSettings: StateFlow<WidgetSettings> = _widgetSettings.asStateFlow()
+
     private val _transcriptItems = MutableStateFlow<List<TranscriptItem>>(emptyList())
     val transcriptItems: StateFlow<List<TranscriptItem>> = _transcriptItems.asStateFlow()
     
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
-    
-    // Mock Telnyx client - in real implementation this would be the actual TelnyxClient
+
+    private val _audioLevels = MutableStateFlow<MutableList<Float>>(emptyList<Float>().toMutableList())
+    val audioLevels: StateFlow<List<Float>> = _audioLevels.asStateFlow()
+
+    // Telnyx client and connection state
     private var isConnected = false
     private var isMuted = false
-    
+    private var handlingResponses = false
+    private var currentCall: Call? = null
+
+    private lateinit var telnyxClient: TelnyxClient
+
     /**
      * Initialize the widget with assistant ID
      */
-    fun initialize(assistantId: String) {
+    fun initialize(context: Context, assistantId: String) {
         viewModelScope.launch {
             try {
-                // Simulate connecting anonymously and fetching widget settings
-                // In real implementation: TelnyxClient.connectAnonymously(assistantId)
-                val mockSettings = createMockWidgetSettings()
-                _widgetState.value = WidgetState.Collapsed(mockSettings)
+                _widgetState.value = WidgetState.Loading
+
+                telnyxClient = TelnyxClient(context)
+
+                telnyxClient.connectAnonymously(
+                    targetId = assistantId,
+                    logLevel = LogLevel.ALL
+                )
+                
+                // Start observing socket responses
+                viewModelScope.launch {
+                    telnyxClient.socketResponseFlow.collect { response ->
+                        handleSocketResponse(response)
+                    }
+                }
+
+                telnyxClient.transcriptUpdateFlow.collect { transcript ->
+                    _transcriptItems.value = transcript.map { TranscriptItem(it.id, it.content, (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), it.timestamp.time) }
+                }
+
+
             } catch (e: Exception) {
-                _widgetState.value = WidgetState.Error("Failed to initialize widget: ${e.message}")
+                _widgetState.value = WidgetState.Error("", ErrorType.Initialization)
             }
         }
     }
@@ -55,23 +99,24 @@ class WidgetViewModel : ViewModel() {
             
             viewModelScope.launch {
                 try {
-                    // Simulate call connection
-                    // In real implementation: TelnyxClient.call("xxx")
-                    kotlinx.coroutines.delay(2000) // Simulate connection delay
-                    
-                    isConnected = true
-                    _widgetState.value = WidgetState.Expanded(
-                        settings = currentState.settings,
-                        isConnected = true,
-                        isMuted = false,
-                        agentStatus = AgentStatus.Waiting
+                    currentCall = telnyxClient.newInvite(
+                        "",
+                        "",
+                        AI_ASSISTANT_DESTINATION,
+                        "",
+                        debug = true
                     )
-                    
-                    // Add initial greeting to transcript
-                    addTranscriptItem("Hello! How can I help you today?", isUser = false)
-                    
+
+                    currentCall?.onCallQualityChange = { metrics: CallQualityMetrics ->
+                        // Ensure level is within 0.0 to 1.0
+                        val clampedLevel = metrics.inboundAudioLevel.coerceIn(0f, 1f)
+                        _audioLevels.update { currentList ->
+                            (currentList + clampedLevel).takeLast(MAX_LEVELS).toMutableList()
+                        }
+                    }
+
                 } catch (e: Exception) {
-                    _widgetState.value = WidgetState.Error("Failed to connect: ${e.message}")
+                    _widgetState.value = WidgetState.Error("${e.message}", ErrorType.Connection)
                 }
             }
         }
@@ -89,7 +134,11 @@ class WidgetViewModel : ViewModel() {
                 else -> return
             }
             
-            // In real implementation: TelnyxClient.hangup()
+            currentCall?.let {
+                telnyxClient.endCall(it.callId)
+                currentCall = null
+            }
+
             isConnected = false
             isMuted = false
             _transcriptItems.value = emptyList()
@@ -101,11 +150,9 @@ class WidgetViewModel : ViewModel() {
      * Toggle mute state
      */
     fun toggleMute() {
-        val currentState = _widgetState.value
-        when (currentState) {
+        when (val currentState = _widgetState.value) {
             is WidgetState.Expanded -> {
                 isMuted = !isMuted
-                // In real implementation: TelnyxClient.mute() or TelnyxClient.unmute()
                 _widgetState.value = currentState.copy(isMuted = isMuted)
             }
             is WidgetState.TranscriptView -> {
@@ -114,6 +161,8 @@ class WidgetViewModel : ViewModel() {
             }
             else -> {}
         }
+
+        currentCall?.onMuteUnmutePressed()
     }
     
     /**
@@ -159,60 +208,138 @@ class WidgetViewModel : ViewModel() {
     fun sendMessage() {
         val message = _userInput.value.trim()
         if (message.isNotEmpty()) {
-            addTranscriptItem(message, isUser = true)
-            _userInput.value = ""
-            
-            // Simulate agent thinking
-            updateAgentStatus(AgentStatus.Thinking)
-            
             viewModelScope.launch {
-                // Simulate processing delay
-                kotlinx.coroutines.delay(1500)
-                
-                // Add mock response
-                val responses = listOf(
-                    "I understand. Let me help you with that.",
-                    "That's a great question. Here's what I think...",
-                    "I can definitely assist you with that request.",
-                    "Let me process that information for you."
-                )
-                addTranscriptItem(responses.random(), isUser = false)
-                
-                // Agent is now waiting
-                updateAgentStatus(AgentStatus.Waiting)
+                telnyxClient.sendAIAssistantMessage(message)
             }
+            _userInput.value = ""
         }
     }
     
-    private fun updateAgentStatus(status: AgentStatus) {
+    /**
+     * Handle socket responses from TelnyxClient
+     */
+    private fun handleSocketResponse(
+        response: SocketResponse<ReceivedMessageBody>
+    ) {
+        if (handlingResponses) {
+            return
+        }
+        when (response.status) {
+            SocketStatus.ESTABLISHED -> handleEstablished()
+            SocketStatus.MESSAGERECEIVED -> handleMessageReceived(response)
+            SocketStatus.LOADING -> handleLoading()
+            SocketStatus.ERROR -> handleError(response)
+            SocketStatus.DISCONNECT -> handleDisconnect()
+        }
+    }
+
+    /**
+     * Handle message received responses
+     */
+    private fun handleMessageReceived(
+        response: SocketResponse<ReceivedMessageBody>
+    ) {
+        val data = response.data
+        when (data?.method) {
+            SocketMethod.CLIENT_READY.methodName -> handleClientReady()
+            SocketMethod.LOGIN.methodName -> handleLogin(data)
+            SocketMethod.INVITE.methodName -> handleInvite(data)
+            SocketMethod.ANSWER.methodName -> handleAnswer(data)
+            SocketMethod.RINGING.methodName -> handleRinging(data)
+            SocketMethod.MEDIA.methodName -> handleMedia()
+            SocketMethod.BYE.methodName -> handleBye(data)
+            SocketMethod.AI_CONVERSATION.methodName -> handleAiConversation(data)
+        }
+    }
+    
+    // Socket status handlers
+    private fun handleEstablished() {
+        Log.d("AiAssistantWidget", "Socket connection established")
+    }
+    
+    private fun handleLoading() {
+        Log.d("AiAssistantWidget", "Socket loading")
+        _widgetState.value = WidgetState.Loading
+    }
+    
+    private fun handleError(response: SocketResponse<ReceivedMessageBody>) {
+        Log.d("AiAssistantWidget", "Socket error: ${response.errorMessage}")
+        _widgetState.value = if (response.errorCode == SocketError.CREDENTIAL_ERROR.errorCode)
+            WidgetState.Error("", ErrorType.Initialization)
+        else
+            WidgetState.Error("${response.errorMessage}", ErrorType.Other)
+    }
+    
+    private fun handleDisconnect() {
+        Log.d("AiAssistantWidget", "Socket disconnected")
+        isConnected = false
         val currentState = _widgetState.value
-        when (currentState) {
-            is WidgetState.Expanded -> {
-                _widgetState.value = currentState.copy(agentStatus = status)
-            }
-            is WidgetState.TranscriptView -> {
-                _widgetState.value = currentState.copy(agentStatus = status)
-            }
-            else -> {}
+        if (currentState is WidgetState.Expanded || currentState is WidgetState.TranscriptView) {
+            _widgetState.value = WidgetState.Collapsed(_widgetSettings.value)
         }
     }
     
-    private fun addTranscriptItem(text: String, isUser: Boolean) {
-        val newItem = TranscriptItem(
-            id = System.currentTimeMillis().toString(),
-            text = text,
-            isUser = isUser
-        )
-        _transcriptItems.value = _transcriptItems.value + newItem
+    // Socket method handlers
+    private fun handleClientReady() {
+        Log.d("AiAssistantWidget", "Client ready")
+        _widgetState.value = WidgetState.Collapsed(_widgetSettings.value)
     }
     
-    private fun createMockWidgetSettings(): WidgetSettings {
-        return WidgetSettings(
-            agentThinkingText = "Agent is thinking...",
-            startCallText = "Let's chat",
-            speakToInterruptText = "Speak to interrupt",
-            theme = "light",
-            logoIconUrl = null // Will use default icon
-        )
+    private fun handleLogin(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "Login received")
+    }
+    
+    private fun handleInvite(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "Invite received")
+    }
+    
+    private fun handleAnswer(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "Answer received")
+        isConnected = true
+        val currentState = _widgetState.value
+        if (currentState is WidgetState.Connecting) {
+            _widgetState.value = WidgetState.Expanded(
+                settings = currentState.settings,
+                isConnected = true,
+                isMuted = false,
+                agentStatus = AgentStatus.Waiting
+            )
+        }
+    }
+    
+    private fun handleRinging(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "Ringing received")
+    }
+    
+    private fun handleMedia() {
+        Log.d("AiAssistantWidget", "Media received")
+    }
+    
+    private fun handleBye(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "Bye received")
+        isConnected = false
+        val currentState = _widgetState.value
+        if (currentState is WidgetState.Expanded || currentState is WidgetState.TranscriptView) {
+            _widgetState.value = WidgetState.Collapsed(_widgetSettings.value)
+        }
+    }
+    
+    private fun handleAiConversation(data: ReceivedMessageBody) {
+        Log.d("AiAssistantWidget", "AI Conversation received ${data.result?.toString()}")
+
+        // Handle AI widget settings
+        data.result?.let { response ->
+            try {
+                val aiConversationResponse = response as AiConversationResponse
+                val params = aiConversationResponse.aiConversationParams
+
+                params?.widgetSettings?.let { widgetSettings ->
+                    _widgetSettings.value = widgetSettings
+                }
+            } catch (e: Throwable) {
+                Log.e("AiAssistantWidget", "AI Conversation parsing error ${e.message}")
+            }
+        }
+
     }
 }

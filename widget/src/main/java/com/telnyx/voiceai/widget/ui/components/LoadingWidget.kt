@@ -6,15 +6,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
 
 /**
  * Loading widget component shown during initialization and connection
  */
 @Composable
 fun LoadingWidget(
-    message: String = "Connecting...",
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -36,13 +36,14 @@ fun LoadingWidget(
                 modifier = Modifier.size(32.dp),
                 color = MaterialTheme.colorScheme.primary
             )
-            
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
         }
+    }
+}
+
+@Preview
+@Composable
+fun LoadingWidgetPreview() {
+    VoiceAIWidgetTheme(darkTheme = false) {
+        LoadingWidget()
     }
 }

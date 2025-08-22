@@ -11,12 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.telnyx.voiceai.widget.data.WidgetSettings
+import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
+import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
  * Expanded widget component showing audio visualizer and controls
@@ -27,6 +28,7 @@ fun ExpandedWidget(
     isConnected: Boolean,
     isMuted: Boolean,
     agentStatus: AgentStatus,
+    audioLevels: List<Float>,
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onTap: () -> Unit,
@@ -51,6 +53,7 @@ fun ExpandedWidget(
         ) {
             // Audio visualizer
             AudioVisualizer(
+                audioLevels = audioLevels,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
@@ -61,8 +64,8 @@ fun ExpandedWidget(
             // Status text
             Text(
                 text = when (agentStatus) {
-                    AgentStatus.Thinking -> settings.agentThinkingText ?: "Agent is thinking..."
-                    AgentStatus.Waiting -> settings.speakToInterruptText ?: "Speak to interrupt"
+                    AgentStatus.Thinking -> if (settings.agentThinkingText?.isNullOrEmpty() == false) settings.agentThinkingText!! else stringResource(R.string.default_agent_thinking_text)
+                    AgentStatus.Waiting -> if (settings.speakToInterruptText?.isNullOrEmpty() == false) settings.speakToInterruptText!! else stringResource(R.string.default_speak_to_interrupt_text)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -83,7 +86,7 @@ fun ExpandedWidget(
                 ) {
                     Icon(
                         imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                        contentDescription = if (isMuted) "Unmute" else "Mute",
+                        contentDescription = if (isMuted) stringResource(R.string.unmute_button_description) else stringResource(R.string.mute_button_description),
                         tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
@@ -96,7 +99,7 @@ fun ExpandedWidget(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CallEnd,
-                        contentDescription = "End Call",
+                        contentDescription = stringResource(R.string.end_call_button_description),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
