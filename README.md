@@ -42,8 +42,11 @@ import com.telnyx.voiceai.widget.AIAssistantWidget
 
 @Composable
 fun MyScreen() {
+    var showWidget by remember { mutableStateOf(false) }
+    
     AIAssistantWidget(
         assistantId = "your-assistant-id",
+        shouldInitialize = showWidget,
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -52,11 +55,20 @@ fun MyScreen() {
 ### 3. Advanced Configuration
 
 ```kotlin
+var shouldInitializeWidget by remember { mutableStateOf(false) }
+
 AIAssistantWidget(
     assistantId = "your-assistant-id",
-    darkTheme = false, // or true, or null for system default
+    shouldInitialize = shouldInitializeWidget,
     modifier = Modifier.fillMaxWidth()
 )
+
+// Initialize the widget when ready
+Button(
+    onClick = { shouldInitializeWidget = true }
+) {
+    Text("Start AI Assistant")
+}
 ```
 
 ## Widget States
@@ -70,7 +82,6 @@ The widget automatically transitions between different states:
 
 ### 2. Loading/Connecting State
 - Shows loading indicator during initialization and connection
-- Displays appropriate status messages
 
 ### 3. Expanded State
 - Audio visualizer showing real-time activity
@@ -118,23 +129,6 @@ The widget is built using:
 - Kotlin 1.9+
 - Jetpack Compose
 
-## Integration with Telnyx WebRTC SDK
-
-This widget is designed to work with the Telnyx WebRTC SDK. The current implementation includes:
-
-- Mock integration for development and testing
-- Placeholder for actual TelnyxClient integration
-- State management compatible with WebRTC events
-
-To integrate with the actual Telnyx WebRTC SDK, replace the mock implementations in `WidgetViewModel` with real TelnyxClient calls.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## License
 
