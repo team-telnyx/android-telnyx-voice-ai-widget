@@ -18,7 +18,17 @@ Add the widget library to your Android project:
 
 ```kotlin
 dependencies {
-    implementation("com.telnyx:voice-ai-widget:1.0.0")
+    implementation("com.telnyx:android-voice-ai-widget:1.0.0")
+}
+```
+
+### Maven Central
+
+This library is published to Maven Central. Make sure you have `mavenCentral()` in your repositories:
+
+```kotlin
+repositories {
+    mavenCentral()
 }
 ```
 
@@ -129,6 +139,48 @@ The widget is built using:
 - Kotlin 1.9+
 - Jetpack Compose
 
+## Development
+
+### Building the Project
+
+```bash
+./gradlew build
+```
+
+### Running Tests
+
+```bash
+./gradlew test
+```
+
+### Running Lint
+
+```bash
+./gradlew lint
+```
+
+### Publishing
+
+The project includes automated publishing to Maven Central via GitHub Actions. Publishing is triggered on:
+- New releases
+- Manual workflow dispatch
+
+### CI/CD
+
+This project includes:
+- **Automated Testing**: Unit tests and lint checks on every PR
+- **Static Analysis**: Semgrep security scanning
+- **Dependency Management**: Dependabot for automated dependency updates
+- **Maven Publishing**: Automated publishing to Maven Central
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass and lint checks succeed
+6. Submit a pull request
 
 ## License
 

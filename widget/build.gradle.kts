@@ -2,6 +2,8 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("maven-publish")
+    id("signing")
 }
 
 android {
@@ -73,4 +75,68 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+// Maven publishing configuration
+val libraryVersion = "1.0.0"
+val libraryGroupId = "com.telnyx"
+val libraryArtifactId = "android-voice-ai-widget"
+
+android {
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = libraryGroupId
+            artifactId = libraryArtifactId
+            version = libraryVersion
+
+            afterEvaluate {
+                from(components["release"])
+            }
+
+            pom {
+                name.set("Telnyx Android Voice AI Widget")
+                description.set("A standalone Android widget for Telnyx Voice AI Assistant integration")
+                url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
+                
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id.set("telnyx")
+                        name.set("Telnyx Team")
+                        email.set("support@telnyx.com")
+                    }
+                }
+                
+                scm {
+                    connection.set("scm:git:git://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
+                    developerConnection.set("scm:git:ssh://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
+                    url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
+                }
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(
+        System.getenv("SIGNING_KEY_ID"),
+        System.getenv("GPG_KEY_CONTENTS"),
+        System.getenv("SIGNING_PASSWORD")
+    )
+    sign(publishing.publications)
 }
