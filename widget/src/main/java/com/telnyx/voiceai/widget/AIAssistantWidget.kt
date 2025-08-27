@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -152,7 +153,9 @@ private fun ErrorWidget(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .testTag("error_widget")
+            .padding(16.dp),
         shape = RoundedCornerShape(24.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
         colors = CardDefaults.cardColors(

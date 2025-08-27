@@ -4,8 +4,6 @@ plugins {
     id("com.android.library") version "8.2.0" apply false
     id("org.jetbrains.kotlin.android") version "1.9.10" apply false
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" apply false
-    id("maven-publish") apply false
-    id("signing") apply false
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
