@@ -43,7 +43,7 @@ jobs:
       
     - name: Build Debug APK and Test APK
       run: |
-        ./gradlew :widget:assembleDebug
+        ./gradlew :example:assembleDebug
         ./gradlew :widget:assembleDebugAndroidTest
       
     - name: 'Authenticate Cloud SDK'
@@ -60,7 +60,7 @@ jobs:
       run: |
         gcloud firebase test android run \
           --type instrumentation \
-          --app widget/build/outputs/apk/debug/widget-debug.apk \
+          --app example/build/outputs/apk/debug/example-debug.apk \
           --test widget/build/outputs/apk/androidTest/debug/widget-debug-androidTest.apk \
           --device model=akita,version=34,locale=en,orientation=portrait \
           --timeout 30m
@@ -90,5 +90,5 @@ jobs:
       with:
         name: debug-apks
         path: |
-          widget/build/outputs/apk/debug/
+          example/build/outputs/apk/debug/
           widget/build/outputs/apk/androidTest/debug/
