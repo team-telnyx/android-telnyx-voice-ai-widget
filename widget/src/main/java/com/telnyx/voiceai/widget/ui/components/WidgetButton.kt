@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +31,8 @@ import com.telnyx.webrtc.sdk.model.WidgetSettings
 fun WidgetButton(
     settings: WidgetSettings,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkTheme: Boolean = false
 ) {
     Card(
         modifier = modifier
@@ -59,7 +61,8 @@ fun WidgetButton(
                         .build(),
                     contentDescription = stringResource(R.string.widget_logo_content_description),
                     modifier = Modifier.size(32.dp),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
+                    colorFilter = if (isDarkTheme) ColorFilter.tint(Color.White) else null
                 )
             } else {
                 Image(
@@ -72,7 +75,7 @@ fun WidgetButton(
             
             // Start call text
             Text(
-                text = if (settings.startCallText?.isNullOrEmpty() == false ) settings.startCallText!! else stringResource(R.string.default_start_call_text),
+                text = settings.startCallText?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.default_start_call_text),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
@@ -88,6 +91,18 @@ fun WidgetButtonPreview() {
         WidgetButton(
             settings = WidgetSettings(),
             onClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun WidgetButtonDarkPreview() {
+    VoiceAIWidgetTheme(darkTheme = true) {
+        WidgetButton(
+            settings = WidgetSettings(),
+            onClick = {},
+            isDarkTheme = true
         )
     }
 }

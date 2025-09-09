@@ -101,7 +101,8 @@ fun AIAssistantWidget(
                 WidgetButton(
                     settings = state.settings,
                     onClick = { viewModel.startCall() },
-                    modifier = modifier
+                    modifier = modifier,
+                    isDarkTheme = themeToUse
                 )
             }
             is WidgetState.Connecting -> {
