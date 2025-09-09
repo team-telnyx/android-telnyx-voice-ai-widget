@@ -65,6 +65,11 @@ sealed class WidgetState {
  */
 enum class AgentStatus {
     /**
+     * Agent is idle (no active conversation)
+     */
+    Idle,
+    
+    /**
      * Agent is thinking/processing user input
      */
     Thinking,

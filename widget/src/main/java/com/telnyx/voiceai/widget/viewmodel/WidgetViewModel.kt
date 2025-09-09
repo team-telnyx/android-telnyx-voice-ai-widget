@@ -327,7 +327,7 @@ class WidgetViewModel : ViewModel() {
     private fun handleAiConversation(data: ReceivedMessageBody) {
         Log.d("AiAssistantWidget", "AI Conversation received ${data.result?.toString()}")
 
-        // Handle AI widget settings
+        // Handle AI widget settings and conversation status
         data.result?.let { response ->
             try {
                 val aiConversationResponse = response as AiConversationResponse
@@ -336,10 +336,40 @@ class WidgetViewModel : ViewModel() {
                 params?.widgetSettings?.let { widgetSettings ->
                     _widgetSettings.value = widgetSettings
                 }
+                
+                // Update agent status based on conversation type
+                params?.type?.let { type ->
+                    val newAgentStatus = when (type) {
+                        "conversation.item.created" -> AgentStatus.Thinking
+                        "response.text.delta", "response.created" -> AgentStatus.Waiting
+                        "response.done", "response.text.done" -> AgentStatus.Idle
+                        else -> null
+                    }
+                    
+                    newAgentStatus?.let { status ->
+                        updateAgentStatus(status)
+                    }
+                }
             } catch (e: Throwable) {
                 Log.e("AiAssistantWidget", "AI Conversation parsing error ${e.message}")
             }
         }
-
+    }
+    
+    /**
+     * Update agent status in current widget state
+     */
+    private fun updateAgentStatus(newStatus: AgentStatus) {
+        when (val currentState = _widgetState.value) {
+            is WidgetState.Expanded -> {
+                _widgetState.value = currentState.copy(agentStatus = newStatus)
+            }
+            is WidgetState.TranscriptView -> {
+                _widgetState.value = currentState.copy(agentStatus = newStatus)
+            }
+            else -> {
+                // Don't update status for other states
+            }
+        }
     }
 }

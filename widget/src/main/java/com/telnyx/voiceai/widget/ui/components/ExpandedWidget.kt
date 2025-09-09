@@ -66,6 +66,7 @@ fun ExpandedWidget(
             // Status text
             Text(
                 text = when (agentStatus) {
+                    AgentStatus.Idle -> stringResource(R.string.default_agent_idle_text)
                     AgentStatus.Thinking -> if (settings.agentThinkingText?.isNullOrEmpty() == false) settings.agentThinkingText!! else stringResource(R.string.default_agent_thinking_text)
                     AgentStatus.Waiting -> if (settings.speakToInterruptText?.isNullOrEmpty() == false) settings.speakToInterruptText!! else stringResource(R.string.default_speak_to_interrupt_text)
                 },

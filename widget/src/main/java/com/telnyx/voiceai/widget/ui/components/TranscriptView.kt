@@ -191,6 +191,7 @@ private fun TranscriptHeader(
             
             Text(
                 text = when (agentStatus) {
+                    AgentStatus.Idle -> stringResource(R.string.default_agent_idle_text)
                     AgentStatus.Thinking -> settings.agentThinkingText ?: stringResource(R.string.default_agent_thinking_text)
                     AgentStatus.Waiting -> settings.speakToInterruptText ?: stringResource(R.string.default_speak_to_interrupt_text)
                 },

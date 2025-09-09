@@ -51,9 +51,9 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
 fun AIAssistantWidget(
     assistantId: String,
     modifier: Modifier = Modifier,
-    shouldInitialize: Boolean = true,
-    viewModel: WidgetViewModel = viewModel()
+    shouldInitialize: Boolean = true
 ) {
+    val viewModel: WidgetViewModel = viewModel()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // Initialize the widget when shouldInitialize becomes true and assistantId is available
