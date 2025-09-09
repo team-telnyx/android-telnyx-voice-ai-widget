@@ -42,10 +42,20 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  * Main AI Assistant Widget component
  * 
  * This is the entry point for integrating the AI Assistant Widget into your application.
+ * The widget handles the complete lifecycle of AI Assistant interactions, including socket
+ * connection, call management, and UI state transitions.
  * 
- * @param assistantId The Assistant ID used to connect to the Telnyx AI service
- * @param modifier Modifier for styling the widget
- * @param shouldInitialize Whether the widget should initialize. Used to control when initialization happens
+ * @param assistantId The Assistant ID from your Telnyx AI configuration used to establish
+ *                   the connection to the AI service. This ID determines which AI assistant
+ *                   configuration and capabilities are loaded.
+ * @param modifier Modifier for styling and positioning the widget within your layout
+ * @param shouldInitialize Controls when the widget establishes its socket connection to Telnyx.
+ *                        When false, the widget remains in Idle state with no network activity.
+ *                        When true, triggers socket connection initialization and loads widget settings.
+ *                        This allows for conditional initialization (e.g., after user consent,
+ *                        network availability checks, or deferred loading for performance).
+ *                        Changing from false to true will trigger initialization.
+ *                        Changing from true to false does NOT disconnect an active session.
  */
 @Composable
 fun AIAssistantWidget(
