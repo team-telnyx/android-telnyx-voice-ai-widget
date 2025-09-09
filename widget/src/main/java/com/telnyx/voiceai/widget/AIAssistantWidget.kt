@@ -3,6 +3,7 @@ package com.telnyx.voiceai.widget
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -112,6 +113,20 @@ fun AIAssistantWidget(
                 )
             }
             is WidgetState.TranscriptView -> {
+                // Keep the expanded widget visible behind the dialog
+                ExpandedWidget(
+                    settings = state.settings,
+                    isConnected = state.isConnected,
+                    isMuted = state.isMuted,
+                    agentStatus = state.agentStatus,
+                    audioLevels,
+                    onToggleMute = { viewModel.toggleMute() },
+                    onEndCall = { viewModel.endCall() },
+                    onTap = { /* Do nothing - already in transcript view */ },
+                    modifier = modifier
+                )
+                
+                // Show transcript view as overlay dialog
                 TranscriptView(
                     settings = state.settings,
                     transcriptItems = transcriptItems,
@@ -124,8 +139,7 @@ fun AIAssistantWidget(
                     onSendMessage = { viewModel.sendMessage() },
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
-                    onCollapse = { viewModel.collapseFromTranscriptView() },
-                    modifier = modifier
+                    onCollapse = { viewModel.collapseFromTranscriptView() }
                 )
             }
             is WidgetState.Error -> {

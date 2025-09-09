@@ -1,5 +1,6 @@
 package com.telnyx.voiceai.widget.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
@@ -25,7 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Full transcript view component
+ * Full transcript view component displayed as fullscreen dialog overlay
  */
 @Composable
 fun TranscriptView(
@@ -43,6 +46,46 @@ fun TranscriptView(
     onCollapse: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Dialog(
+        onDismissRequest = onCollapse,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
+    ) {
+        TranscriptDialogContent(
+            settings = settings,
+            transcriptItems = transcriptItems,
+            userInput = userInput,
+            isConnected = isConnected,
+            isMuted = isMuted,
+            agentStatus = agentStatus,
+            audioLevels = audioLevels,
+            onUserInputChange = onUserInputChange,
+            onSendMessage = onSendMessage,
+            onToggleMute = onToggleMute,
+            onEndCall = onEndCall,
+            onCollapse = onCollapse
+        )
+    }
+}
+
+@Composable
+private fun TranscriptDialogContent(
+    settings: WidgetSettings,
+    transcriptItems: List<TranscriptItem>,
+    userInput: String,
+    isConnected: Boolean,
+    isMuted: Boolean,
+    agentStatus: AgentStatus,
+    audioLevels: List<Float>,
+    onUserInputChange: (String) -> Unit,
+    onSendMessage: () -> Unit,
+    onToggleMute: () -> Unit,
+    onEndCall: () -> Unit,
+    onCollapse: () -> Unit
+) {
     val listState = rememberLazyListState()
     
     // Auto-scroll to bottom when new messages arrive
@@ -52,64 +95,55 @@ fun TranscriptView(
         }
     }
     
-    Card(
-        modifier = modifier.padding(16.dp),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Column(
+        // Header with controls
+        TranscriptHeader(
+            isConnected = isConnected,
+            isMuted = isMuted,
+            agentStatus = agentStatus,
+            settings = settings,
+            audioLevels = audioLevels,
+            onToggleMute = onToggleMute,
+            onEndCall = onEndCall,
+            onCollapse = onCollapse
+        )
+        
+        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        
+        // Transcript messages
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            items(transcriptItems) { item ->
+                TranscriptMessage(
+                    item = item,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        
+        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        
+        // Input field
+        MessageInput(
+            value = userInput,
+            onValueChange = onUserInputChange,
+            onSend = onSendMessage,
+            enabled = isConnected,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
-        ) {
-            // Header with controls
-            TranscriptHeader(
-                isConnected = isConnected,
-                isMuted = isMuted,
-                agentStatus = agentStatus,
-                settings = settings,
-                audioLevels = audioLevels,
-                onToggleMute = onToggleMute,
-                onEndCall = onEndCall,
-                onCollapse = onCollapse
-            )
-            
-            Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-            
-            // Transcript messages
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                items(transcriptItems) { item ->
-                    TranscriptMessage(
-                        item = item,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-            
-            Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-            
-            // Input field
-            MessageInput(
-                value = userInput,
-                onValueChange = onUserInputChange,
-                onSend = onSendMessage,
-                enabled = isConnected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
-        }
+                .padding(16.dp)
+        )
     }
 }
 
