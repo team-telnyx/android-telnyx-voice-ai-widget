@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.util.Log
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.telnyx.voiceai.widget.R
@@ -56,15 +57,26 @@ fun WidgetButton(
         ) {
             // Logo or default icon
             if (!settings.logoIconUrl.isNullOrEmpty()) {
+                Log.d("WidgetButton", "Loading image from URL: ${settings.logoIconUrl}")
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(settings.logoIconUrl)
-                        .crossfade(true)
+                        .crossfade(false)
+                        .fallback(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .addHeader("User-Agent", "Mozilla/5.0 (Android) Telnyx-Widget/1.0")
+                        .listener(
+                            onStart = { Log.d("WidgetButton", "Image loading started") },
+                            onSuccess = { _, _ -> Log.d("WidgetButton", "Image loaded successfully") },
+                            onError = { _, result -> 
+                                Log.e("WidgetButton", "Image loading failed: ${result.throwable.message}")
+                            }
+                        )
                         .build(),
                     contentDescription = stringResource(R.string.widget_logo_content_description),
                     modifier = Modifier.size(32.dp).then(buttonImageModifier),
                     contentScale = ContentScale.Fit,
-                    colorFilter = if (isDarkTheme) ColorFilter.tint(Color.White) else null
+                    colorFilter = null
                 )
             } else {
                 Image(
