@@ -56,12 +56,20 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  *                        network availability checks, or deferred loading for performance).
  *                        Changing from false to true will trigger initialization.
  *                        Changing from true to false does NOT disconnect an active session.
+ * @param widgetButtonModifier Modifier applied to the widget button in collapsed state
+ * @param expandedWidgetModifier Modifier applied to the expanded widget
+ * @param buttonTextModifier Modifier applied to the text visible on the widget button
+ * @param buttonImageModifier Modifier applied to the image/icon visible on the widget button
  */
 @Composable
 fun AIAssistantWidget(
     assistantId: String,
     modifier: Modifier = Modifier,
-    shouldInitialize: Boolean = true
+    shouldInitialize: Boolean = true,
+    widgetButtonModifier: Modifier = Modifier,
+    expandedWidgetModifier: Modifier = Modifier,
+    buttonTextModifier: Modifier = Modifier,
+    buttonImageModifier: Modifier = Modifier
 ) {
     val viewModel: WidgetViewModel = viewModel()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -101,8 +109,10 @@ fun AIAssistantWidget(
                 WidgetButton(
                     settings = state.settings,
                     onClick = { viewModel.startCall() },
-                    modifier = modifier,
-                    isDarkTheme = themeToUse
+                    modifier = modifier.then(widgetButtonModifier),
+                    isDarkTheme = themeToUse,
+                    buttonTextModifier = buttonTextModifier,
+                    buttonImageModifier = buttonImageModifier
                 )
             }
             is WidgetState.Connecting -> {
@@ -120,7 +130,7 @@ fun AIAssistantWidget(
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
                     onTap = { viewModel.showTranscriptView() },
-                    modifier = modifier
+                    modifier = modifier.then(expandedWidgetModifier)
                 )
             }
             is WidgetState.TranscriptView -> {
@@ -134,7 +144,7 @@ fun AIAssistantWidget(
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
                     onTap = { /* Do nothing - already in transcript view */ },
-                    modifier = modifier
+                    modifier = modifier.then(expandedWidgetModifier)
                 )
                 
                 // Show transcript view as overlay dialog

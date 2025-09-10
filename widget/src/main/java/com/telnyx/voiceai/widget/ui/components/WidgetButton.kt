@@ -32,7 +32,9 @@ fun WidgetButton(
     settings: WidgetSettings,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = false
+    isDarkTheme: Boolean = false,
+    buttonTextModifier: Modifier = Modifier,
+    buttonImageModifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
@@ -60,7 +62,7 @@ fun WidgetButton(
                         .crossfade(true)
                         .build(),
                     contentDescription = stringResource(R.string.widget_logo_content_description),
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(32.dp).then(buttonImageModifier),
                     contentScale = ContentScale.Fit,
                     colorFilter = if (isDarkTheme) ColorFilter.tint(Color.White) else null
                 )
@@ -68,7 +70,7 @@ fun WidgetButton(
                 Image(
                     painter = painterResource(R.drawable.default_avatar),
                     contentDescription = stringResource(R.string.ai_assistant_content_description),
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(32.dp).then(buttonImageModifier),
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                 )
             }
@@ -78,7 +80,8 @@ fun WidgetButton(
                 text = settings.startCallText?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.default_start_call_text),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = buttonTextModifier
             )
         }
     }
