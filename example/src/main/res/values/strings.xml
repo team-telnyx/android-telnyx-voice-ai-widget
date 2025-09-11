@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Voice AI Widget Example</string>
+    <string name="top_app_bar_title">Telnyx Voice AI Widget Configuration</string>
+    <string name="configuration_title">Configuration</string>
+    <string name="assistant_id_label">Assistant ID</string>
+    <string name="dark_theme_label">Dark Theme</string>
+    <string name="how_to_use_title">Instructions</string>
+    <string name="instructions_text">1. Enter your assistant ID\n2. Click "Create Widget" to display the voice AI widget\n3. Tap the widget to start a voice conversation\n4. Widget expands during calls, conversation view is full screen</string>
+    <string name="widget_demo_title">Your Voice AI Widget</string>
+    <string name="create_widget_button">Create Widget</string>
+    <string name="alert_empty_assistant_id">Please enter an Assistant ID</string>
+    <string name="alert_ok_button">OK</string>
+</resources>
