@@ -53,7 +53,7 @@ fun WidgetButton(
                 .padding(16.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
             // Logo or default icon
             if (!settings.logoIconUrl.isNullOrEmpty()) {
@@ -86,7 +86,9 @@ fun WidgetButton(
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                 )
             }
-            
+
+            Spacer(modifier = Modifier.width(12.dp))
+
             // Start call text
             Text(
                 text = settings.startCallText?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.default_start_call_text),
