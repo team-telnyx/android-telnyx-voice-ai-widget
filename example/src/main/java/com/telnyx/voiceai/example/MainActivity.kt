@@ -37,6 +37,7 @@ fun ExampleApp() {
     var assistantId by remember { mutableStateOf("demo-assistant-id") }
     var showAlertDialog by remember { mutableStateOf(false) }
     var showWidget by remember { mutableStateOf(false) }
+    var iconOnly by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -68,6 +69,53 @@ fun ExampleApp() {
                     .padding(horizontal = 16.dp),
                 singleLine = true
             )
+
+            // Widget Mode selection
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.widget_mode_label),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Regular mode radio button
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = !iconOnly,
+                            onClick = { iconOnly = false }
+                        )
+                        Text(
+                            text = stringResource(R.string.widget_mode_regular),
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                    
+                    // Icon Only mode radio button
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = iconOnly,
+                            onClick = { iconOnly = true }
+                        )
+                        Text(
+                            text = stringResource(R.string.widget_mode_icon_only),
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+            }
 
             // Create Widget button
             Button(
@@ -101,6 +149,7 @@ fun ExampleApp() {
             AIAssistantWidget(
                 assistantId = assistantId,
                 shouldInitialize = showWidget,
+                iconOnly = iconOnly,
                 modifier = Modifier.fillMaxWidth()
             )
 

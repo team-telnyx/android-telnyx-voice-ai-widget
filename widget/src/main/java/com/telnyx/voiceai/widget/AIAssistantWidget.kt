@@ -56,6 +56,9 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  *                        network availability checks, or deferred loading for performance).
  *                        Changing from false to true will trigger initialization.
  *                        Changing from true to false does NOT disconnect an active session.
+ * @param iconOnly When true, displays the widget as a floating action button with only the icon.
+ *                In this mode, tapping starts the call and opens directly into the full screen
+ *                text view. When false, displays the regular widget button with text.
  * @param widgetButtonModifier Modifier applied to the widget button in collapsed state
  * @param expandedWidgetModifier Modifier applied to the expanded widget
  * @param buttonTextModifier Modifier applied to the text visible on the widget button
@@ -66,6 +69,7 @@ fun AIAssistantWidget(
     assistantId: String,
     modifier: Modifier = Modifier,
     shouldInitialize: Boolean = true,
+    iconOnly: Boolean = false,
     widgetButtonModifier: Modifier = Modifier,
     expandedWidgetModifier: Modifier = Modifier,
     buttonTextModifier: Modifier = Modifier,
@@ -106,14 +110,28 @@ fun AIAssistantWidget(
                 )
             }
             is WidgetState.Collapsed -> {
-                WidgetButton(
-                    settings = state.settings,
-                    onClick = { viewModel.startCall() },
-                    modifier = modifier.then(widgetButtonModifier),
-                    isDarkTheme = themeToUse,
-                    buttonTextModifier = buttonTextModifier,
-                    buttonImageModifier = buttonImageModifier
-                )
+                if (iconOnly) {
+                    FloatingButton(
+                        settings = state.settings,
+                        onClick = { 
+                            viewModel.startCall()
+                            // In iconOnly mode, go directly to transcript view after starting call
+                            viewModel.showTranscriptView()
+                        },
+                        modifier = modifier.then(widgetButtonModifier),
+                        isDarkTheme = themeToUse,
+                        buttonImageModifier = buttonImageModifier
+                    )
+                } else {
+                    WidgetButton(
+                        settings = state.settings,
+                        onClick = { viewModel.startCall() },
+                        modifier = modifier.then(widgetButtonModifier),
+                        isDarkTheme = themeToUse,
+                        buttonTextModifier = buttonTextModifier,
+                        buttonImageModifier = buttonImageModifier
+                    )
+                }
             }
             is WidgetState.Connecting -> {
                 LoadingWidget(
@@ -121,31 +139,38 @@ fun AIAssistantWidget(
                 )
             }
             is WidgetState.Expanded -> {
-                ExpandedWidget(
-                    settings = state.settings,
-                    isConnected = state.isConnected,
-                    isMuted = state.isMuted,
-                    agentStatus = state.agentStatus,
-                    audioLevels,
-                    onToggleMute = { viewModel.toggleMute() },
-                    onEndCall = { viewModel.endCall() },
-                    onTap = { viewModel.showTranscriptView() },
-                    modifier = modifier.then(expandedWidgetModifier)
-                )
+                if (iconOnly) {
+                    // In iconOnly mode, skip expanded state and go directly to transcript view
+                    viewModel.showTranscriptView()
+                } else {
+                    ExpandedWidget(
+                        settings = state.settings,
+                        isConnected = state.isConnected,
+                        isMuted = state.isMuted,
+                        agentStatus = state.agentStatus,
+                        audioLevels,
+                        onToggleMute = { viewModel.toggleMute() },
+                        onEndCall = { viewModel.endCall() },
+                        onTap = { viewModel.showTranscriptView() },
+                        modifier = modifier.then(expandedWidgetModifier)
+                    )
+                }
             }
             is WidgetState.TranscriptView -> {
-                // Keep the expanded widget visible behind the dialog
-                ExpandedWidget(
-                    settings = state.settings,
-                    isConnected = state.isConnected,
-                    isMuted = state.isMuted,
-                    agentStatus = state.agentStatus,
-                    audioLevels,
-                    onToggleMute = { viewModel.toggleMute() },
-                    onEndCall = { viewModel.endCall() },
-                    onTap = { /* Do nothing - already in transcript view */ },
-                    modifier = modifier.then(expandedWidgetModifier)
-                )
+                if (!iconOnly) {
+                    // Keep the expanded widget visible behind the dialog (only in regular mode)
+                    ExpandedWidget(
+                        settings = state.settings,
+                        isConnected = state.isConnected,
+                        isMuted = state.isMuted,
+                        agentStatus = state.agentStatus,
+                        audioLevels,
+                        onToggleMute = { viewModel.toggleMute() },
+                        onEndCall = { viewModel.endCall() },
+                        onTap = { /* Do nothing - already in transcript view */ },
+                        modifier = modifier.then(expandedWidgetModifier)
+                    )
+                }
                 
                 // Show transcript view as overlay dialog
                 TranscriptView(
@@ -164,13 +189,28 @@ fun AIAssistantWidget(
                 )
             }
             is WidgetState.Error -> {
-                ErrorWidget(
-                    message = state.message,
-                    type = state.type,
-                    assistantId = assistantId,
-                    onRetry = { viewModel.initialize(context, assistantId) },
-                    modifier = modifier
-                )
+                if (iconOnly) {
+                    FloatingButton(
+                        settings = widgetSettings,
+                        onClick = { 
+                            // In iconOnly mode, show error dialog when tapped
+                            // For now, we'll retry initialization
+                            viewModel.initialize(context, assistantId)
+                        },
+                        modifier = modifier.then(widgetButtonModifier),
+                        isDarkTheme = themeToUse,
+                        isError = true,
+                        buttonImageModifier = buttonImageModifier
+                    )
+                } else {
+                    ErrorWidget(
+                        message = state.message,
+                        type = state.type,
+                        assistantId = assistantId,
+                        onRetry = { viewModel.initialize(context, assistantId) },
+                        modifier = modifier
+                    )
+                }
             }
         }
     }
