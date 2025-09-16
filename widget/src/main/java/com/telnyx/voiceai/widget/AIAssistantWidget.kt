@@ -105,9 +105,15 @@ fun AIAssistantWidget(
 
             }
             is WidgetState.Loading -> {
-                LoadingWidget(
-                    modifier = modifier
-                )
+                if (iconOnly) {
+                    LoadingWidget(
+                        isCircular = true // Make it circular for icon-only mode
+                    )
+                } else {
+                    LoadingWidget(
+                        modifier = modifier
+                    )
+                }
             }
             is WidgetState.Collapsed -> {
                 if (iconOnly) {
@@ -118,8 +124,6 @@ fun AIAssistantWidget(
                             // In iconOnly mode, go directly to transcript view after starting call
                             viewModel.showTranscriptView()
                         },
-                        modifier = modifier.then(widgetButtonModifier),
-                        isDarkTheme = themeToUse,
                         buttonImageModifier = buttonImageModifier
                     )
                 } else {
@@ -127,16 +131,21 @@ fun AIAssistantWidget(
                         settings = state.settings,
                         onClick = { viewModel.startCall() },
                         modifier = modifier.then(widgetButtonModifier),
-                        isDarkTheme = themeToUse,
                         buttonTextModifier = buttonTextModifier,
                         buttonImageModifier = buttonImageModifier
                     )
                 }
             }
             is WidgetState.Connecting -> {
-                LoadingWidget(
-                    modifier = modifier
-                )
+                if (iconOnly) {
+                    LoadingWidget(
+                        isCircular = true // Make it circular for icon-only mode
+                    )
+                } else {
+                    LoadingWidget(
+                        modifier = modifier
+                    )
+                }
             }
             is WidgetState.Expanded -> {
                 if (iconOnly) {
@@ -185,7 +194,8 @@ fun AIAssistantWidget(
                     onSendMessage = { viewModel.sendMessage() },
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
-                    onCollapse = { viewModel.collapseFromTranscriptView() }
+                    onCollapse = { viewModel.collapseFromTranscriptView() },
+                    iconOnly = iconOnly
                 )
             }
             is WidgetState.Error -> {
@@ -197,8 +207,6 @@ fun AIAssistantWidget(
                             // For now, we'll retry initialization
                             viewModel.initialize(context, assistantId)
                         },
-                        modifier = modifier.then(widgetButtonModifier),
-                        isDarkTheme = themeToUse,
                         isError = true,
                         buttonImageModifier = buttonImageModifier
                     )

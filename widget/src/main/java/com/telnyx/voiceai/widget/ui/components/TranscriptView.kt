@@ -44,7 +44,8 @@ fun TranscriptView(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconOnly: Boolean = false
 ) {
     Dialog(
         onDismissRequest = onCollapse,
@@ -66,7 +67,8 @@ fun TranscriptView(
             onSendMessage = onSendMessage,
             onToggleMute = onToggleMute,
             onEndCall = onEndCall,
-            onCollapse = onCollapse
+            onCollapse = onCollapse,
+            iconOnly = iconOnly
         )
     }
 }
@@ -84,7 +86,8 @@ private fun TranscriptDialogContent(
     onSendMessage: () -> Unit,
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
-    onCollapse: () -> Unit
+    onCollapse: () -> Unit,
+    iconOnly: Boolean = false
 ) {
     val listState = rememberLazyListState()
     
@@ -109,7 +112,8 @@ private fun TranscriptDialogContent(
             audioLevels = audioLevels,
             onToggleMute = onToggleMute,
             onEndCall = onEndCall,
-            onCollapse = onCollapse
+            onCollapse = onCollapse,
+            iconOnly = iconOnly
         )
         
         Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -157,7 +161,8 @@ private fun TranscriptHeader(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconOnly: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -166,13 +171,21 @@ private fun TranscriptHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Collapse button
-        IconButton(onClick = onCollapse) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = stringResource(R.string.collapse_button_description),
-                tint = MaterialTheme.colorScheme.onSurface
-            )
+        // Left column - always takes 20% width for consistent spacing
+        Column(
+            modifier = Modifier.fillMaxWidth(0.2f),
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Collapse button (only show in regular mode)
+            if (!iconOnly) {
+                IconButton(onClick = onCollapse) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = stringResource(R.string.collapse_button_description),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
         
         // Status and visualizer

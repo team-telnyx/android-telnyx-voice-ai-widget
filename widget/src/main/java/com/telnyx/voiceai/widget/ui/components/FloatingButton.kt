@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import android.util.Log
+import androidx.compose.foundation.background
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.telnyx.voiceai.widget.R
@@ -38,14 +39,13 @@ fun FloatingButton(
     settings: WidgetSettings,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = false,
     isError: Boolean = false,
     buttonImageModifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isError) {
         MaterialTheme.colorScheme.error
     } else {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.colorScheme.surface
     }
     
     Card(
@@ -100,7 +100,7 @@ fun FloatingButton(
                         painter = painterResource(R.drawable.default_avatar),
                         contentDescription = stringResource(R.string.ai_assistant_content_description),
                         modifier = Modifier.size(32.dp).then(buttonImageModifier),
-                        colorFilter = ColorFilter.tint(Color.White)
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                     )
                 }
             }
@@ -137,8 +137,7 @@ fun FloatingButtonDarkPreview() {
     VoiceAIWidgetTheme(darkTheme = true) {
         FloatingButton(
             settings = WidgetSettings(),
-            onClick = {},
-            isDarkTheme = true
+            onClick = {}
         )
     }
 }

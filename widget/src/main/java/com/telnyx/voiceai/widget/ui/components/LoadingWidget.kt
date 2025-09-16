@@ -2,6 +2,7 @@ package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,29 +17,42 @@ import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
  */
 @Composable
 fun LoadingWidget(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCircular: Boolean = false
 ) {
     Card(
         modifier = modifier
             .testTag("loading_widget")
-            .padding(16.dp),
-        shape = RoundedCornerShape(24.dp),
+            .then(if (isCircular) Modifier.size(56.dp) else Modifier.padding(16.dp)),
+        shape = if (isCircular) CircleShape else RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(32.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
+        if (isCircular) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -48,5 +62,13 @@ fun LoadingWidget(
 fun LoadingWidgetPreview() {
     VoiceAIWidgetTheme(darkTheme = false) {
         LoadingWidget()
+    }
+}
+
+@Preview
+@Composable
+fun LoadingWidgetCircularPreview() {
+    VoiceAIWidgetTheme(darkTheme = false) {
+        LoadingWidget(isCircular = true)
     }
 }
