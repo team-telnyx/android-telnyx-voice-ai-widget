@@ -33,6 +33,8 @@ class WidgetViewModel : ViewModel() {
     private val AI_ASSISTANT_DESTINATION = "ai-assistant"
     private val MAX_LEVELS = 20
 
+    private var iconOnly: Boolean = false
+
     private val _widgetState = MutableStateFlow<WidgetState>(WidgetState.Idle)
     val widgetState: StateFlow<WidgetState> = _widgetState.asStateFlow()
 
@@ -59,7 +61,8 @@ class WidgetViewModel : ViewModel() {
     /**
      * Initialize the widget with assistant ID
      */
-    fun initialize(context: Context, assistantId: String) {
+    fun initialize(context: Context, assistantId: String, iconOnly: Boolean = false) {
+        this.iconOnly = iconOnly
         viewModelScope.launch {
             try {
                 _widgetState.value = WidgetState.Loading
@@ -298,12 +301,23 @@ class WidgetViewModel : ViewModel() {
         isConnected = true
         val currentState = _widgetState.value
         if (currentState is WidgetState.Connecting) {
-            _widgetState.value = WidgetState.Expanded(
-                settings = currentState.settings,
-                isConnected = true,
-                isMuted = false,
-                agentStatus = AgentStatus.Waiting
-            )
+            if (iconOnly) {
+                // In icon-only mode, skip Expanded state and go directly to TranscriptView
+                _widgetState.value = WidgetState.TranscriptView(
+                    settings = currentState.settings,
+                    isConnected = true,
+                    isMuted = false,
+                    agentStatus = AgentStatus.Waiting
+                )
+            } else {
+                // In regular mode, transition to Expanded state
+                _widgetState.value = WidgetState.Expanded(
+                    settings = currentState.settings,
+                    isConnected = true,
+                    isMuted = false,
+                    agentStatus = AgentStatus.Waiting
+                )
+            }
         }
     }
     

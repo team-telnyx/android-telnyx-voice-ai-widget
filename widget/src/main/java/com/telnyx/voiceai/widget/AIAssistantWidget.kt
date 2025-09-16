@@ -81,7 +81,7 @@ fun AIAssistantWidget(
     // Initialize the widget when shouldInitialize becomes true and assistantId is available
     LaunchedEffect(shouldInitialize) {
         if (shouldInitialize) {
-            viewModel.initialize(context, assistantId)
+            viewModel.initialize(context, assistantId, iconOnly)
         }
     }
 
@@ -121,8 +121,8 @@ fun AIAssistantWidget(
                         settings = state.settings,
                         onClick = { 
                             viewModel.startCall()
-                            // In iconOnly mode, go directly to transcript view after starting call
-                            viewModel.showTranscriptView()
+                            // Note: In iconOnly mode, the ViewModel will automatically transition
+                            // to transcript view when the call state reaches Expanded
                         },
                         buttonImageModifier = buttonImageModifier
                     )
@@ -148,10 +148,8 @@ fun AIAssistantWidget(
                 }
             }
             is WidgetState.Expanded -> {
-                if (iconOnly) {
-                    // In iconOnly mode, skip expanded state and go directly to transcript view
-                    viewModel.showTranscriptView()
-                } else {
+                if (!iconOnly) {
+                    // This should not happen in iconOnly mode due to ViewModel logic
                     ExpandedWidget(
                         settings = state.settings,
                         isConnected = state.isConnected,
@@ -205,7 +203,7 @@ fun AIAssistantWidget(
                         onClick = { 
                             // In iconOnly mode, show error dialog when tapped
                             // For now, we'll retry initialization
-                            viewModel.initialize(context, assistantId)
+                            viewModel.initialize(context, assistantId, iconOnly)
                         },
                         isError = true,
                         buttonImageModifier = buttonImageModifier
@@ -215,7 +213,7 @@ fun AIAssistantWidget(
                         message = state.message,
                         type = state.type,
                         assistantId = assistantId,
-                        onRetry = { viewModel.initialize(context, assistantId) },
+                        onRetry = { viewModel.initialize(context, assistantId, iconOnly) },
                         modifier = modifier
                     )
                 }
