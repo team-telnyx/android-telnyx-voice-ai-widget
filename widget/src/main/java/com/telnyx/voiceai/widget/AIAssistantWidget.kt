@@ -3,7 +3,6 @@ package com.telnyx.voiceai.widget
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +29,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.WidgetState
 import com.telnyx.voiceai.widget.ui.components.*
@@ -90,6 +90,7 @@ fun AIAssistantWidget(
     val transcriptItems by viewModel.transcriptItems.collectAsState()
     val userInput by viewModel.userInput.collectAsState()
     val audioLevels by viewModel.audioLevels.collectAsState()
+    var floatingButtonErrorState by remember { mutableStateOf(null as WidgetState.Error?) }
 
     val themeToUse = when (widgetSettings.theme?.lowercase()) {
         "dark" -> true
@@ -202,8 +203,7 @@ fun AIAssistantWidget(
                         settings = widgetSettings,
                         onClick = { 
                             // In iconOnly mode, show error dialog when tapped
-                            // For now, we'll retry initialization
-                            viewModel.initialize(context, assistantId, iconOnly)
+                            floatingButtonErrorState = state
                         },
                         isError = true,
                         buttonImageModifier = buttonImageModifier
@@ -217,6 +217,30 @@ fun AIAssistantWidget(
                         modifier = modifier
                     )
                 }
+            }
+        }
+    }
+
+    if (floatingButtonErrorState != null) {
+        VoiceAIWidgetTheme (darkTheme = themeToUse){
+            Dialog(
+                onDismissRequest = { floatingButtonErrorState = null },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = false,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
+            ) {
+                ErrorWidget(
+                    message = floatingButtonErrorState!!.message,
+                    type = floatingButtonErrorState!!.type,
+                    assistantId = assistantId,
+                    onRetry = {
+                        viewModel.initialize(context, assistantId, iconOnly)
+                        floatingButtonErrorState = null
+                              },
+                    modifier = modifier
+                )
             }
         }
     }
