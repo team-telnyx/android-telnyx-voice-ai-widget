@@ -62,7 +62,38 @@ fun MyScreen() {
 }
 ```
 
-### 3. Understanding `shouldInitialize` Parameter
+### 3. Icon-Only Mode (Floating Action Button)
+
+The widget supports an icon-only mode that displays as a floating action button:
+
+```kotlin
+AIAssistantWidget(
+    assistantId = "your-assistant-id",
+    shouldInitialize = true,
+    iconOnly = true, // Enables floating action button mode
+    modifier = Modifier.fillMaxWidth()
+)
+```
+
+#### Icon-Only Mode Features:
+
+- **Compact Design**: Displays only the icon in a circular floating action button
+- **Direct Access**: Tapping starts the call and opens directly into the full-screen transcript view
+- **No Expanded State**: Skips the intermediate expanded widget state
+- **Error Handling**: Shows a red error icon when there are connection issues
+- **Background Color**: Uses the theme's primary color for the button background
+
+#### Icon-Only vs Regular Mode:
+
+| Feature | Regular Mode | Icon-Only Mode |
+|---------|-------------|----------------|
+| **Collapsed State** | Button with text and icon | Circular floating button with icon only |
+| **Tap Behavior** | Opens to expanded widget | Starts call and opens transcript view directly |
+| **Expanded State** | Shows audio visualizer and controls | Skipped - goes directly to transcript |
+| **Error State** | Shows detailed error card | Shows red error icon in floating button |
+| **Use Case** | Full-featured integration | Minimal, space-efficient integration |
+
+### 4. Understanding `shouldInitialize` Parameter
 
 The `shouldInitialize` parameter controls when the widget establishes its network connection to Telnyx servers. This is crucial for controlling:
 
@@ -157,6 +188,7 @@ AIAssistantWidget(
     assistantId = "your-assistant-id",
     modifier = Modifier.fillMaxWidth(), // Overall widget positioning
     shouldInitialize = true,
+    iconOnly = false, // Enable floating action button mode
     
     // New customization modifiers:
     widgetButtonModifier = Modifier.padding(8.dp), // Applied to collapsed button
@@ -166,14 +198,18 @@ AIAssistantWidget(
 )
 ```
 
-### Modifier Parameters
+### Parameters
 
-| Parameter | Description | Applied To |
-|-----------|-------------|------------|
-| `widgetButtonModifier` | Styling for the collapsed widget button | The entire button Card in collapsed state |
-| `expandedWidgetModifier` | Styling for the expanded widget | The entire expanded widget Card |
-| `buttonTextModifier` | Styling for the button text | The start call text in the collapsed button |
-| `buttonImageModifier` | Styling for the button icon/logo | The image or icon displayed in the collapsed button |
+| Parameter | Type | Description | Applied To |
+|-----------|------|-------------|------------|
+| `assistantId` | String | Your Telnyx Assistant ID | Required for initialization |
+| `modifier` | Modifier | Overall widget positioning and styling | The entire widget container |
+| `shouldInitialize` | Boolean | Controls when to establish network connection | Widget initialization |
+| `iconOnly` | Boolean | Enable floating action button mode | Widget display mode |
+| `widgetButtonModifier` | Modifier | Styling for the collapsed widget button | The entire button Card in collapsed state |
+| `expandedWidgetModifier` | Modifier | Styling for the expanded widget | The entire expanded widget Card |
+| `buttonTextModifier` | Modifier | Styling for the button text | The start call text in the collapsed button (ignored in iconOnly mode) |
+| `buttonImageModifier` | Modifier | Styling for the button icon/logo | The image or icon displayed in the collapsed button |
 
 ### Usage Examples
 
@@ -236,24 +272,29 @@ AIAssistantWidget(
 The widget automatically transitions between different states:
 
 ### 1. Collapsed State
-- Shows a compact button with customizable text
-- Displays logo icon if configured
+- **Regular Mode**: Shows a compact button with customizable text and logo icon
+- **Icon-Only Mode**: Shows a circular floating action button with only the icon
 - Tap to initiate a call
 
 ### 2. Loading/Connecting State
 - Shows loading indicator during initialization and connection
+- Same behavior in both regular and icon-only modes
 
 ### 3. Expanded State
-- Audio visualizer showing real-time activity
-- Mute/unmute and end call controls
-- Agent status indicators (thinking/waiting)
-- Tap to open full transcript view
+- **Regular Mode**: Audio visualizer, mute/unmute controls, agent status indicators
+- **Icon-Only Mode**: This state is skipped - goes directly to transcript view
+- Tap to open full transcript view (regular mode only)
 
 ### 4. Transcript View
 - Full conversation history
 - Text input for typing messages
 - Audio controls and visualizer
-- Collapsible back to expanded view
+- **Regular Mode**: Collapsible back to expanded view
+- **Icon-Only Mode**: Primary interface for interaction
+
+### 5. Error State
+- **Regular Mode**: Shows detailed error card with retry button
+- **Icon-Only Mode**: Shows red error icon in floating button
 
 ## Customization
 

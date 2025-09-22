@@ -3,7 +3,6 @@ package com.telnyx.voiceai.widget
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +29,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.WidgetState
 import com.telnyx.voiceai.widget.ui.components.*
@@ -56,6 +56,9 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  *                        network availability checks, or deferred loading for performance).
  *                        Changing from false to true will trigger initialization.
  *                        Changing from true to false does NOT disconnect an active session.
+ * @param iconOnly When true, displays the widget as a floating action button with only the icon.
+ *                In this mode, tapping starts the call and opens directly into the full screen
+ *                text view. When false, displays the regular widget button with text.
  * @param widgetButtonModifier Modifier applied to the widget button in collapsed state
  * @param expandedWidgetModifier Modifier applied to the expanded widget
  * @param buttonTextModifier Modifier applied to the text visible on the widget button
@@ -66,6 +69,7 @@ fun AIAssistantWidget(
     assistantId: String,
     modifier: Modifier = Modifier,
     shouldInitialize: Boolean = true,
+    iconOnly: Boolean = false,
     widgetButtonModifier: Modifier = Modifier,
     expandedWidgetModifier: Modifier = Modifier,
     buttonTextModifier: Modifier = Modifier,
@@ -77,7 +81,7 @@ fun AIAssistantWidget(
     // Initialize the widget when shouldInitialize becomes true and assistantId is available
     LaunchedEffect(shouldInitialize) {
         if (shouldInitialize) {
-            viewModel.initialize(context, assistantId)
+            viewModel.initialize(context, assistantId, iconOnly)
         }
     }
 
@@ -86,6 +90,7 @@ fun AIAssistantWidget(
     val transcriptItems by viewModel.transcriptItems.collectAsState()
     val userInput by viewModel.userInput.collectAsState()
     val audioLevels by viewModel.audioLevels.collectAsState()
+    var floatingButtonErrorState by remember { mutableStateOf(null as WidgetState.Error?) }
 
     val themeToUse = when (widgetSettings.theme?.lowercase()) {
         "dark" -> true
@@ -101,51 +106,79 @@ fun AIAssistantWidget(
 
             }
             is WidgetState.Loading -> {
-                LoadingWidget(
-                    modifier = modifier
-                )
+                if (iconOnly) {
+                    LoadingWidget(
+                        isCircular = true // Make it circular for icon-only mode
+                    )
+                } else {
+                    LoadingWidget(
+                        modifier = modifier
+                    )
+                }
             }
             is WidgetState.Collapsed -> {
-                WidgetButton(
-                    settings = state.settings,
-                    onClick = { viewModel.startCall() },
-                    modifier = modifier.then(widgetButtonModifier),
-                    isDarkTheme = themeToUse,
-                    buttonTextModifier = buttonTextModifier,
-                    buttonImageModifier = buttonImageModifier
-                )
+                if (iconOnly) {
+                    FloatingButton(
+                        settings = state.settings,
+                        onClick = { 
+                            viewModel.startCall()
+                            // Note: In iconOnly mode, the ViewModel will automatically transition
+                            // to transcript view when the call state reaches Expanded
+                        },
+                        buttonImageModifier = buttonImageModifier
+                    )
+                } else {
+                    WidgetButton(
+                        settings = state.settings,
+                        onClick = { viewModel.startCall() },
+                        modifier = modifier.then(widgetButtonModifier),
+                        buttonTextModifier = buttonTextModifier,
+                        buttonImageModifier = buttonImageModifier
+                    )
+                }
             }
             is WidgetState.Connecting -> {
-                LoadingWidget(
-                    modifier = modifier
-                )
+                if (iconOnly) {
+                    LoadingWidget(
+                        isCircular = true // Make it circular for icon-only mode
+                    )
+                } else {
+                    LoadingWidget(
+                        modifier = modifier
+                    )
+                }
             }
             is WidgetState.Expanded -> {
-                ExpandedWidget(
-                    settings = state.settings,
-                    isConnected = state.isConnected,
-                    isMuted = state.isMuted,
-                    agentStatus = state.agentStatus,
-                    audioLevels,
-                    onToggleMute = { viewModel.toggleMute() },
-                    onEndCall = { viewModel.endCall() },
-                    onTap = { viewModel.showTranscriptView() },
-                    modifier = modifier.then(expandedWidgetModifier)
-                )
+                if (!iconOnly) {
+                    // This should not happen in iconOnly mode due to ViewModel logic
+                    ExpandedWidget(
+                        settings = state.settings,
+                        isConnected = state.isConnected,
+                        isMuted = state.isMuted,
+                        agentStatus = state.agentStatus,
+                        audioLevels,
+                        onToggleMute = { viewModel.toggleMute() },
+                        onEndCall = { viewModel.endCall() },
+                        onTap = { viewModel.showTranscriptView() },
+                        modifier = modifier.then(expandedWidgetModifier)
+                    )
+                }
             }
             is WidgetState.TranscriptView -> {
-                // Keep the expanded widget visible behind the dialog
-                ExpandedWidget(
-                    settings = state.settings,
-                    isConnected = state.isConnected,
-                    isMuted = state.isMuted,
-                    agentStatus = state.agentStatus,
-                    audioLevels,
-                    onToggleMute = { viewModel.toggleMute() },
-                    onEndCall = { viewModel.endCall() },
-                    onTap = { /* Do nothing - already in transcript view */ },
-                    modifier = modifier.then(expandedWidgetModifier)
-                )
+                if (!iconOnly) {
+                    // Keep the expanded widget visible behind the dialog (only in regular mode)
+                    ExpandedWidget(
+                        settings = state.settings,
+                        isConnected = state.isConnected,
+                        isMuted = state.isMuted,
+                        agentStatus = state.agentStatus,
+                        audioLevels,
+                        onToggleMute = { viewModel.toggleMute() },
+                        onEndCall = { viewModel.endCall() },
+                        onTap = { /* Do nothing - already in transcript view */ },
+                        modifier = modifier.then(expandedWidgetModifier)
+                    )
+                }
                 
                 // Show transcript view as overlay dialog
                 TranscriptView(
@@ -160,15 +193,52 @@ fun AIAssistantWidget(
                     onSendMessage = { viewModel.sendMessage() },
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
-                    onCollapse = { viewModel.collapseFromTranscriptView() }
+                    onCollapse = { viewModel.collapseFromTranscriptView() },
+                    iconOnly = iconOnly
                 )
             }
             is WidgetState.Error -> {
+                if (iconOnly) {
+                    FloatingButton(
+                        settings = widgetSettings,
+                        onClick = { 
+                            // In iconOnly mode, show error dialog when tapped
+                            floatingButtonErrorState = state
+                        },
+                        isError = true,
+                        buttonImageModifier = buttonImageModifier
+                    )
+                } else {
+                    ErrorWidget(
+                        message = state.message,
+                        type = state.type,
+                        assistantId = assistantId,
+                        onRetry = { viewModel.initialize(context, assistantId, iconOnly) },
+                        modifier = modifier
+                    )
+                }
+            }
+        }
+    }
+
+    if (floatingButtonErrorState != null) {
+        VoiceAIWidgetTheme (darkTheme = themeToUse){
+            Dialog(
+                onDismissRequest = { floatingButtonErrorState = null },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = false,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
+            ) {
                 ErrorWidget(
-                    message = state.message,
-                    type = state.type,
+                    message = floatingButtonErrorState!!.message,
+                    type = floatingButtonErrorState!!.type,
                     assistantId = assistantId,
-                    onRetry = { viewModel.initialize(context, assistantId) },
+                    onRetry = {
+                        viewModel.initialize(context, assistantId, iconOnly)
+                        floatingButtonErrorState = null
+                              },
                     modifier = modifier
                 )
             }

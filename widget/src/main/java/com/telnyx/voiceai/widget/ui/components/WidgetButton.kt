@@ -33,7 +33,6 @@ fun WidgetButton(
     settings: WidgetSettings,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = false,
     buttonTextModifier: Modifier = Modifier,
     buttonImageModifier: Modifier = Modifier
 ) {
@@ -118,8 +117,7 @@ fun WidgetButtonDarkPreview() {
     VoiceAIWidgetTheme(darkTheme = true) {
         WidgetButton(
             settings = WidgetSettings(),
-            onClick = {},
-            isDarkTheme = true
+            onClick = {}
         )
     }
 }

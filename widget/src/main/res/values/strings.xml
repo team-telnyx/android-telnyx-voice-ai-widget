@@ -4,6 +4,7 @@
     <string name="widget_logo_content_description">Widget Logo</string>
     <string name="ai_assistant_content_description">AI Assistant</string>
     <string name="default_start_call_text">Let\'s chat</string>
+    <string name="error_icon_content_description">Error</string>
     
     <!-- Agent Status -->
     <string name="default_agent_idle_text"></string>
