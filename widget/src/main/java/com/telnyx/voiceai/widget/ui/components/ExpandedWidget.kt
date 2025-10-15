@@ -60,7 +60,8 @@ fun ExpandedWidget(
                     .fillMaxWidth()
                     .height(60.dp),
                 isActive = isConnected && agentStatus == AgentStatus.Waiting,
-                color = MaterialTheme.colorScheme.primary
+                audioBarColor = MaterialTheme.colorScheme.primary,
+                settings = settings
             )
             
             // Status text

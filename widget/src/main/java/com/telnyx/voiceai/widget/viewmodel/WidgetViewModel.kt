@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 class WidgetViewModel : ViewModel() {
 
     private val AI_ASSISTANT_DESTINATION = "ai-assistant"
-    private val MAX_LEVELS = 20
+    private val MAX_LEVELS = 12
 
     private var iconOnly: Boolean = false
 
@@ -43,7 +43,7 @@ class WidgetViewModel : ViewModel() {
 
     private val _transcriptItems = MutableStateFlow<List<TranscriptItem>>(emptyList())
     val transcriptItems: StateFlow<List<TranscriptItem>> = _transcriptItems.asStateFlow()
-    
+
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
 
@@ -145,6 +145,7 @@ class WidgetViewModel : ViewModel() {
             isConnected = false
             isMuted = false
             _transcriptItems.value = emptyList()
+            _audioLevels.value = mutableListOf()
             _widgetState.value = WidgetState.Collapsed(settings)
         }
     }

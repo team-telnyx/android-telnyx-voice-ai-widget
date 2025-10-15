@@ -1,5 +1,6 @@
 package com.telnyx.voiceai.widget.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -22,12 +27,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.webrtc.sdk.model.WidgetSettings
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Full transcript view component displayed as fullscreen dialog overlay
@@ -102,49 +107,97 @@ private fun TranscriptDialogContent(
     
     // Define custom colors based on theme
     val isLightTheme = !MaterialTheme.colorScheme.surface.equals(Color(0xFF1E293B))
-    val upperSectionColor = if (isLightTheme) Color(0xFFFFFDF4) else Color(0xFF000000)
-    val lowerSectionColor = if (isLightTheme) Color(0xFFE3E0CE) else Color(0xFF38383A)
-    val textBoxColor = if (isLightTheme) Color(0xFFFFFDF4) else Color(0xFF222127)
-    
+    val backgroundColor = if (isLightTheme) Color(0xFFFFFFFF) else Color(0xFF1C1B1F)
+
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
     ) {
-        // Upper section - Audio controls (50% of screen)
+        // Title bar with close button (only show in regular mode)
+        if (!iconOnly) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.conversation_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+
+                IconButton(onClick = onCollapse) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.collapse_button_description),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Horizontal divider line below title
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+        }
+
+        // Upper section - Audio controls (30% of screen)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.5f)
-                .background(upperSectionColor)
+                .weight(0.3f)
+                .background(Color.Transparent)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp)
         ) {
-            ExpandedAudioSection(
-                isConnected = isConnected,
-                isMuted = isMuted,
-                agentStatus = agentStatus,
-                settings = settings,
-                audioLevels = audioLevels,
-                onToggleMute = onToggleMute,
-                onEndCall = onEndCall,
-                onCollapse = onCollapse,
-                iconOnly = iconOnly,
-                modifier = Modifier.fillMaxSize()
-            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize(),
+                shape = RoundedCornerShape(24.dp),
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
+            ) {
+                ExpandedAudioSection(
+                    isConnected = isConnected,
+                    isMuted = isMuted,
+                    agentStatus = agentStatus,
+                    settings = settings,
+                    audioLevels = audioLevels,
+                    onToggleMute = onToggleMute,
+                    onEndCall = onEndCall,
+                    onCollapse = onCollapse,
+                    iconOnly = iconOnly,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                )
+            }
         }
         
         // Lower section - Conversation area (50% of screen)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.5f)
-                .background(
-                    color = lowerSectionColor,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                )
+                .weight(0.7f)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 16.dp)
             ) {
+                // Horizontal divider line
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+
                 // Transcript messages
                 LazyColumn(
                     state = listState,
@@ -158,6 +211,7 @@ private fun TranscriptDialogContent(
                     items(transcriptItems) { item ->
                         TranscriptMessage(
                             item = item,
+                            settings = settings,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -169,7 +223,6 @@ private fun TranscriptDialogContent(
                     onValueChange = onUserInputChange,
                     onSend = onSendMessage,
                     enabled = isConnected,
-                    backgroundColor = textBoxColor,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -193,40 +246,21 @@ private fun ExpandedAudioSection(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(24.dp),
+        modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        // Collapse button at the top (only show in regular mode)
-        if (!iconOnly) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                IconButton(onClick = onCollapse) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.collapse_button_description),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.weight(1f))
-        
         // Audio visualizer - prominently in the middle
         AudioVisualizer(
             audioLevels = audioLevels,
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(80.dp),
+                .fillMaxWidth()
+                .height(60.dp),
             isActive = isConnected && agentStatus == AgentStatus.Waiting,
-            color = MaterialTheme.colorScheme.primary
+            audioBarColor = MaterialTheme.colorScheme.primary,
+            settings = settings
         )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Agent status text
         Text(
             text = when (agentStatus) {
@@ -234,15 +268,13 @@ private fun ExpandedAudioSection(
                 AgentStatus.Thinking -> settings.agentThinkingText ?: stringResource(R.string.default_agent_thinking_text)
                 AgentStatus.Waiting -> settings.speakToInterruptText ?: stringResource(R.string.default_speak_to_interrupt_text)
             },
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
+
         // Control buttons underneath
         Row(
             horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -260,7 +292,7 @@ private fun ExpandedAudioSection(
                     modifier = Modifier.size(28.dp)
                 )
             }
-            
+
             // End call button
             IconButton(
                 onClick = onEndCall,
@@ -274,171 +306,98 @@ private fun ExpandedAudioSection(
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun TranscriptHeader(
-    isConnected: Boolean,
-    isMuted: Boolean,
-    agentStatus: AgentStatus,
-    settings: WidgetSettings,
-    audioLevels: List<Float>,
-    onToggleMute: () -> Unit,
-    onEndCall: () -> Unit,
-    onCollapse: () -> Unit,
-    modifier: Modifier = Modifier,
-    iconOnly: Boolean = false
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left column - always takes 20% width for consistent spacing
-        Column(
-            modifier = Modifier.fillMaxWidth(0.2f),
-            horizontalAlignment = Alignment.Start
-        ) {
-            // Collapse button (only show in regular mode)
-            if (!iconOnly) {
-                IconButton(onClick = onCollapse) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.collapse_button_description),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-        
-        // Status and visualizer
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            AudioVisualizer(
-                audioLevels,
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(24.dp),
-                isActive = isConnected && agentStatus == AgentStatus.Waiting,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Text(
-                text = when (agentStatus) {
-                    AgentStatus.Idle -> stringResource(R.string.default_agent_idle_text)
-                    AgentStatus.Thinking -> settings.agentThinkingText ?: stringResource(R.string.default_agent_thinking_text)
-                    AgentStatus.Waiting -> settings.speakToInterruptText ?: stringResource(R.string.default_speak_to_interrupt_text)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-        
-        // Control buttons
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            IconButton(onClick = onToggleMute) {
-                Icon(
-                    imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = if (isMuted) stringResource(R.string.unmute_button_description) else stringResource(R.string.mute_button_description),
-                    tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                )
-            }
-            
-            IconButton(onClick = onEndCall) {
-                Icon(
-                    imageVector = Icons.Default.CallEnd,
-                    contentDescription = stringResource(R.string.end_call_button_description),
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-        }
     }
 }
 
 @Composable
 private fun TranscriptMessage(
     item: TranscriptItem,
+    settings: WidgetSettings,
     modifier: Modifier = Modifier
 ) {
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    
     Row(
         modifier = modifier,
-        horizontalArrangement = if (item.isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (item.isUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Top
     ) {
         if (!item.isUser) {
-            // Agent message
-            Column(
-                modifier = Modifier.fillMaxWidth(0.8f)
+            // Agent message with avatar on left
+            // Avatar
+            if (!settings.logoIconUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(settings.logoIconUrl)
+                        .crossfade(false)
+                        .fallback(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .build(),
+                    contentDescription = "Agent avatar",
+                    modifier = Modifier.size(32.dp),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.default_avatar),
+                    contentDescription = "Agent avatar",
+                    modifier = Modifier.size(32.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Message card
+            Card(
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                modifier = Modifier.fillMaxWidth(0.75f)
             ) {
-                Card(
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 16.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = item.text,
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
                 Text(
-                    text = timeFormat.format(Date(item.timestamp)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                    text = item.text,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
-            // User message
-            Column(
-                modifier = Modifier.fillMaxWidth(0.8f),
-                horizontalAlignment = Alignment.End
+            // User message with avatar on right
+            // Message card
+            Card(
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 4.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth(0.75f)
             ) {
-                Card(
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 16.dp,
-                        bottomEnd = 16.dp
-                    ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = item.text,
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                
                 Text(
-                    text = timeFormat.format(Date(item.timestamp)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(end = 8.dp, top = 4.dp)
+                    text = item.text,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Avatar
+            Image(
+                painter = painterResource(R.drawable.person),
+                contentDescription = "User avatar",
+                modifier = Modifier.size(32.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+            )
         }
     }
 }
