@@ -30,8 +30,8 @@ import kotlinx.coroutines.launch
  */
 class WidgetViewModel : ViewModel() {
 
-    private val AI_ASSISTANT_DESTINATION = "ai-assistant"
-    private val MAX_LEVELS = 12
+    private val aiAssistantDestination = "ai-assistant"
+    private val maxLevels = 12
 
     private var iconOnly: Boolean = false
 
@@ -87,6 +87,7 @@ class WidgetViewModel : ViewModel() {
 
 
             } catch (e: Exception) {
+                Log.e("AiAssistantWidget", "Initialization error: ${e.message}", e)
                 _widgetState.value = WidgetState.Error("", ErrorType.Initialization)
             }
         }
@@ -105,7 +106,7 @@ class WidgetViewModel : ViewModel() {
                     currentCall = telnyxClient.newInvite(
                         "",
                         "",
-                        AI_ASSISTANT_DESTINATION,
+                        aiAssistantDestination,
                         "",
                         debug = true
                     )
@@ -114,7 +115,7 @@ class WidgetViewModel : ViewModel() {
                         // Ensure level is within 0.0 to 1.0
                         val clampedLevel = metrics.inboundAudioLevel.coerceIn(0f, 1f)
                         _audioLevels.update { currentList ->
-                            (currentList + clampedLevel).takeLast(MAX_LEVELS).toMutableList()
+                            (currentList + clampedLevel).takeLast(maxLevels).toMutableList()
                         }
                     }
 

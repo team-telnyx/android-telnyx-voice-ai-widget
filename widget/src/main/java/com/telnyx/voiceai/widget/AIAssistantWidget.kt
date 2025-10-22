@@ -366,16 +366,3 @@ private fun ErrorWidget(
         }
     }
 }
-
-@Preview
-@Composable
-private fun ErrorWidgetPreview() {
-    VoiceAIWidgetTheme(darkTheme = false) {
-        ErrorWidget(
-            message = "Something went wrong",
-            type = ErrorType.Initialization,
-            assistantId = "assistant-b26afd32-84a9-4c09-8346-b667002d0d63",
-            onRetry = {}
-        )
-    }
-}

@@ -60,15 +60,35 @@ private const val NOISE_FLOOR = 0.15f
 private const val HISTORY_LENGTH = 5
 private const val DECAY_RATE = 0.85f
 
+// Audio processing constants
+private const val COMPRESSION_EXPONENT = 0.7f
+private const val SENSITIVITY_BOOST = 1.5f
+private const val BASS_THRESHOLD = 0.2f
+private const val BASS_RESPONSE_BASE = 1.2f
+private const val BASS_FREQUENCY_FACTOR = 0.5f
+private const val MID_THRESHOLD = 0.6f
+private const val MID_RESPONSE_BASE = 0.8f
+private const val MID_VARIATION_RANGE = 0.4f
+private const val TREBLE_RESPONSE_BASE = 0.6f
+private const val TREBLE_VARIATION = 0.3f
+private const val SINE_TIME_MULTIPLIER = 0.01
+private const val VARIATION_BASE = 0.8f
+private const val VARIATION_RANGE = 0.4f
+
+// Drawing constants
+private const val SPACING_MULTIPLIER = 0.3f
+private const val MAX_BAR_HEIGHT_RATIO = 0.8f
+private const val MIN_BAR_HEIGHT_RATIO = 0.1f
+
 /**
  * Amplify low audio levels for better visual response
  * Applies dynamic range compression and sensitivity boost
  */
 private fun amplifyAudioLevel(level: Float): Float {
     // Apply dynamic range compression
-    val boosted = level.pow(0.7f)
+    val boosted = level.pow(COMPRESSION_EXPONENT)
     // Boost sensitivity
-    val amplified = boosted * 1.5f
+    val amplified = boosted * SENSITIVITY_BOOST
     return min(1.0f, amplified)
 }
 
@@ -86,23 +106,23 @@ private fun processAudioData(audioLevel: Float, barCount: Int = BAR_COUNT): List
 
         // Different frequency bands respond differently
         val response = when {
-            frequency < 0.2f -> {
+            frequency < BASS_THRESHOLD -> {
                 // Bass: Strong response, slower decay
-                audioLevel * (1.2f - frequency * 0.5f)
+                audioLevel * (BASS_RESPONSE_BASE - frequency * BASS_FREQUENCY_FACTOR)
             }
-            frequency < 0.6f -> {
+            frequency < MID_THRESHOLD -> {
                 // Midrange: Moderate response with some randomness
-                audioLevel * (0.8f + random.nextFloat() * 0.4f)
+                audioLevel * (MID_RESPONSE_BASE + random.nextFloat() * MID_VARIATION_RANGE)
             }
             else -> {
                 // Treble: Sharp response, quick changes
-                val sineWave = sin((currentTime * 0.01 + i).toDouble()).toFloat()
-                audioLevel * (0.6f + sineWave * 0.3f)
+                val sineWave = sin((currentTime * SINE_TIME_MULTIPLIER + i).toDouble()).toFloat()
+                audioLevel * (TREBLE_RESPONSE_BASE + sineWave * TREBLE_VARIATION)
             }
         }
 
         // Add some random variation for organic feel
-        val variedResponse = response * (0.8f + random.nextFloat() * 0.4f)
+        val variedResponse = response * (VARIATION_BASE + random.nextFloat() * VARIATION_RANGE)
 
         // Ensure minimum activity and clamp
         max(NOISE_FLOOR, min(1.0f, variedResponse))
@@ -202,12 +222,10 @@ private fun DrawScope.drawAudioBars(
     audioValues: List<Float>,
     color: Color
 ) {
-    val barCount = 12 // Fixed to 12 bars
-    val spacingMultiplier = 0.3f // 70% reduction from original spacing (1.0 - 0.7 = 0.3)
-    val barWidth = size.width / (barCount + (barCount - 1) * spacingMultiplier)
-    val spacing = barWidth * spacingMultiplier
-    val maxBarHeight = size.height * 0.8f
-    val minBarHeight = size.height * 0.1f // 50% reduction from 0.2f
+    val barWidth = size.width / (BAR_COUNT + (BAR_COUNT - 1) * SPACING_MULTIPLIER)
+    val spacing = barWidth * SPACING_MULTIPLIER
+    val maxBarHeight = size.height * MAX_BAR_HEIGHT_RATIO
+    val minBarHeight = size.height * MIN_BAR_HEIGHT_RATIO
 
     audioValues.forEachIndexed { index, audioValue ->
         val barHeight = minBarHeight + (maxBarHeight - minBarHeight) * audioValue
@@ -227,12 +245,10 @@ private fun DrawScope.drawAudioBarsWithGradient(
     audioValues: List<Float>,
     gradientColors: List<Color>
 ) {
-    val barCount = 12 // Fixed to 12 bars
-    val spacingMultiplier = 0.3f // 70% reduction from original spacing (1.0 - 0.7 = 0.3)
-    val barWidth = size.width / (barCount + (barCount - 1) * spacingMultiplier)
-    val spacing = barWidth * spacingMultiplier
-    val maxBarHeight = size.height * 0.8f
-    val minBarHeight = size.height * 0.1f // 50% reduction from 0.2f
+    val barWidth = size.width / (BAR_COUNT + (BAR_COUNT - 1) * SPACING_MULTIPLIER)
+    val spacing = barWidth * SPACING_MULTIPLIER
+    val maxBarHeight = size.height * MAX_BAR_HEIGHT_RATIO
+    val minBarHeight = size.height * MIN_BAR_HEIGHT_RATIO
 
     audioValues.forEachIndexed { index, audioValue ->
         val barHeight = minBarHeight + (maxBarHeight - minBarHeight) * audioValue
