@@ -5,7 +5,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+// Custom colors for transcript view
+data class TranscriptColors(
+    val backgroundColor: Color
+)
+
+private val LightTranscriptColors = TranscriptColors(
+    backgroundColor = Color(0xFFFFFFFF)
+)
+
+private val DarkTranscriptColors = TranscriptColors(
+    backgroundColor = Color(0xFF1C1B1F)
+)
+
+val LocalTranscriptColors = staticCompositionLocalOf { LightTranscriptColors }
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF6366F1),
@@ -47,9 +63,18 @@ fun VoiceAIWidgetTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val transcriptColors = when {
+        darkTheme -> DarkTranscriptColors
+        else -> LightTranscriptColors
+    }
+
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalTranscriptColors provides transcriptColors
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

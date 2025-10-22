@@ -2,7 +2,6 @@ package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +32,7 @@ import coil.request.ImageRequest
 import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
+import com.telnyx.voiceai.widget.ui.theme.LocalTranscriptColors
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
@@ -98,21 +98,21 @@ private fun TranscriptDialogContent(
     iconOnly: Boolean = false
 ) {
     val listState = rememberLazyListState()
-    
+
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(transcriptItems.size) {
         if (transcriptItems.isNotEmpty()) {
             listState.animateScrollToItem(transcriptItems.size - 1)
         }
     }
-    
-    // Define custom colors based on theme
-    val backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFFFFFFF) else Color(0xFF1C1B1F)
+
+    // Get custom colors from theme
+    val transcriptColors = LocalTranscriptColors.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(transcriptColors.backgroundColor)
     ) {
         // Title bar with close button (only show in regular mode)
         if (!iconOnly) {
