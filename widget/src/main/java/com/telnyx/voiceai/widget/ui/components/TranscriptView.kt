@@ -2,6 +2,7 @@ package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -106,8 +107,7 @@ private fun TranscriptDialogContent(
     }
     
     // Define custom colors based on theme
-    val isLightTheme = !MaterialTheme.colorScheme.surface.equals(Color(0xFF1E293B))
-    val backgroundColor = if (isLightTheme) Color(0xFFFFFFFF) else Color(0xFF1C1B1F)
+    val backgroundColor = if (!isSystemInDarkTheme()) Color(0xFFFFFFFF) else Color(0xFF1C1B1F)
 
     Column(
         modifier = Modifier
@@ -170,8 +170,6 @@ private fun TranscriptDialogContent(
                     audioLevels = audioLevels,
                     onToggleMute = onToggleMute,
                     onEndCall = onEndCall,
-                    onCollapse = onCollapse,
-                    iconOnly = iconOnly,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface)
@@ -241,8 +239,6 @@ private fun ExpandedAudioSection(
     audioLevels: List<Float>,
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
-    onCollapse: () -> Unit,
-    iconOnly: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
