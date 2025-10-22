@@ -325,6 +325,8 @@ naming:
     functionPattern: '[a-z][a-zA-Z0-9]*'
     excludeClassPattern: '$^'
     ignoreOverridden: true
+    ignoreAnnotated:
+      - 'Composable'
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -578,6 +580,8 @@ style:
     ignoreEnums: false
     ignoreRanges: false
     ignoreExtensionFunctions: true
+    ignoreAnnotated:
+      - 'Composable'
   MandatoryBracesIfStatements:
     active: false
   MandatoryBracesLoops:
