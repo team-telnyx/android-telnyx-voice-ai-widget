@@ -8,11 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Custom colors for transcript view
-data class TranscriptColors(
-    val backgroundColor: Color
-)
-
 private val LightTranscriptColors = TranscriptColors(
     backgroundColor = Color(0xFFFFFFFF)
 )
@@ -51,6 +46,40 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Color(0xFF1E293B),
     surfaceVariant = Color(0xFFF1F5F9),
     onSurfaceVariant = Color(0xFF475569)
+)
+
+// Define gradient color schemes
+val audioGradients = mapOf(
+    "verdant" to listOf(
+        Color(0xFFD3FFA6), // Light green
+        Color(0xFF036B5B), // Dark teal
+        Color(0xFFD3FFA6), // Light green
+    ),
+    "twilight" to listOf(
+        Color(0xFF81B9FF), // Light blue
+        Color(0xFF371A5E), // Dark purple
+        Color(0xFF81B9FF), // Light blue
+    ),
+    "bloom" to listOf(
+        Color(0xFFFFD4FE), // Light pink
+        Color(0xFFFD05F9), // Bright magenta
+        Color(0xFFFFD4FE), // Light pink
+    ),
+    "mystic" to listOf(
+        Color(0xFF1F023A), // Dark purple
+        Color(0xFFCA76FF), // Light purple
+        Color(0xFF1F023A), // Dark purple
+    ),
+    "flare" to listOf(
+        Color(0xFFFFFFFF), // White
+        Color(0xFFFC5F00), // Orange
+        Color(0xFFFFFFFF), // White
+    ),
+    "glacier" to listOf(
+        Color(0xFF4CE5F2), // Light cyan
+        Color(0xFF005A98), // Dark blue
+        Color(0xFF4CE5F2), // Light cyan
+    )
 )
 
 @Composable

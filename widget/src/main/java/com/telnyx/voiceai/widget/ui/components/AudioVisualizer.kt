@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import com.telnyx.voiceai.widget.ui.theme.audioGradients
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 import kotlin.math.min
 import kotlin.math.pow
@@ -20,45 +21,10 @@ import kotlin.math.sin
 import kotlin.math.max
 import kotlin.random.Random
 
-// Define gradient color schemes
-private val audioGradients = mapOf(
-    "verdant" to listOf(
-        Color(0xFFD3FFA6), // Light green
-        Color(0xFF036B5B), // Dark teal
-        Color(0xFFD3FFA6), // Light green
-    ),
-    "twilight" to listOf(
-        Color(0xFF81B9FF), // Light blue
-        Color(0xFF371A5E), // Dark purple
-        Color(0xFF81B9FF), // Light blue
-    ),
-    "bloom" to listOf(
-        Color(0xFFFFD4FE), // Light pink
-        Color(0xFFFD05F9), // Bright magenta
-        Color(0xFFFFD4FE), // Light pink
-    ),
-    "mystic" to listOf(
-        Color(0xFF1F023A), // Dark purple
-        Color(0xFFCA76FF), // Light purple
-        Color(0xFF1F023A), // Dark purple
-    ),
-    "flare" to listOf(
-        Color(0xFFFFFFFF), // White
-        Color(0xFFFC5F00), // Orange
-        Color(0xFFFFFFFF), // White
-    ),
-    "glacier" to listOf(
-        Color(0xFF4CE5F2), // Light cyan
-        Color(0xFF005A98), // Dark blue
-        Color(0xFF4CE5F2), // Light cyan
-    )
-)
-
 // Configuration constants matching Flutter implementation
 private const val BAR_COUNT = 12
 private const val NOISE_FLOOR = 0.15f
 private const val HISTORY_LENGTH = 5
-private const val DECAY_RATE = 0.85f
 
 // Audio processing constants
 private const val COMPRESSION_EXPONENT = 0.7f

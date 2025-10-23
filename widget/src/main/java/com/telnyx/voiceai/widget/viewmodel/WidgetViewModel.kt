@@ -25,13 +25,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private const val MAX_LEVELS = 12
+
 /**
  * ViewModel for managing the AI Assistant Widget state and interactions
  */
 class WidgetViewModel : ViewModel() {
 
     private val aiAssistantDestination = "ai-assistant"
-    private val maxLevels = 12
 
     private var iconOnly: Boolean = false
 
@@ -115,7 +116,7 @@ class WidgetViewModel : ViewModel() {
                         // Ensure level is within 0.0 to 1.0
                         val clampedLevel = metrics.inboundAudioLevel.coerceIn(0f, 1f)
                         _audioLevels.update { currentList ->
-                            (currentList + clampedLevel).takeLast(maxLevels).toMutableList()
+                            (currentList + clampedLevel).takeLast(MAX_LEVELS).toMutableList()
                         }
                     }
 
