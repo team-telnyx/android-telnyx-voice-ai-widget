@@ -2,10 +2,12 @@ package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -24,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -33,6 +37,7 @@ import com.telnyx.voiceai.widget.R
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.voiceai.widget.ui.theme.LocalTranscriptColors
+import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
@@ -112,25 +117,24 @@ private fun TranscriptDialogContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(transcriptColors.backgroundColor)
+            .background(transcriptColors.topSectionColor)
     ) {
-        // Title bar with close button (only show in regular mode)
+        // Close button in top right (only show in regular mode)
         if (!iconOnly) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                contentAlignment = Alignment.TopEnd
             ) {
-                Text(
-                    text = stringResource(R.string.conversation_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-
-                IconButton(onClick = onCollapse) {
+                IconButton(
+                    onClick = onCollapse,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape
+                        )) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.collapse_button_description),
@@ -138,13 +142,6 @@ private fun TranscriptDialogContent(
                     )
                 }
             }
-
-            // Horizontal divider line below title
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
         }
 
         // Upper section - Audio controls (30% of screen)
@@ -152,50 +149,35 @@ private fun TranscriptDialogContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.3f)
-                .background(Color.Transparent)
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp)
         ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize(),
-                shape = RoundedCornerShape(24.dp),
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
-                ExpandedAudioSection(
-                    isConnected = isConnected,
-                    isMuted = isMuted,
-                    agentStatus = agentStatus,
-                    settings = settings,
-                    audioLevels = audioLevels,
-                    onToggleMute = onToggleMute,
-                    onEndCall = onEndCall,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
-                )
-            }
+            ExpandedAudioSection(
+                isConnected = isConnected,
+                isMuted = isMuted,
+                agentStatus = agentStatus,
+                settings = settings,
+                audioLevels = audioLevels,
+                onToggleMute = onToggleMute,
+                onEndCall = onEndCall,
+                modifier = Modifier.fillMaxSize()
+            )
         }
         
-        // Lower section - Conversation area (50% of screen)
+        // Lower section - Conversation area (70% of screen)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.7f)
+                .background(
+                    color = transcriptColors.bottomSectionColor,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 16.dp)
+                    .padding(top = 10.dp)
             ) {
-                // Horizontal divider line
-                Divider(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-
                 // Transcript messages
                 LazyColumn(
                     state = listState,
@@ -203,7 +185,7 @@ private fun TranscriptDialogContent(
                         .weight(1f)
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(transcriptItems) { item ->
@@ -214,13 +196,14 @@ private fun TranscriptDialogContent(
                         )
                     }
                 }
-                
+
                 // Input field
                 MessageInput(
                     value = userInput,
                     onValueChange = onUserInputChange,
                     onSend = onSendMessage,
                     enabled = isConnected,
+                    backgroundColor = transcriptColors.textBoxColor,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -279,12 +262,17 @@ private fun ExpandedAudioSection(
             // Mute/Unmute button
             IconButton(
                 onClick = onToggleMute,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
             ) {
                 Icon(
                     imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
                     contentDescription = if (isMuted) stringResource(R.string.unmute_button_description) else stringResource(R.string.mute_button_description),
-                    tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -292,12 +280,17 @@ private fun ExpandedAudioSection(
             // End call button
             IconButton(
                 onClick = onEndCall,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = Color.Red,
+                        shape = CircleShape
+                    )
             ) {
                 Icon(
                     imageVector = Icons.Default.CallEnd,
                     contentDescription = stringResource(R.string.end_call_button_description),
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -353,7 +346,7 @@ private fun TranscriptMessage(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
-                modifier = Modifier.fillMaxWidth(0.75f)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = item.text,
@@ -368,14 +361,15 @@ private fun TranscriptMessage(
             Card(
                 shape = RoundedCornerShape(
                     topStart = 16.dp,
-                    topEnd = 4.dp,
+                    topEnd = 16.dp,
                     bottomStart = 16.dp,
                     bottomEnd = 16.dp
                 ),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                modifier = Modifier.fillMaxWidth(0.75f)
+                modifier = Modifier
+                    .weight(1f)
             ) {
                 Text(
                     text = item.text,
@@ -436,17 +430,86 @@ private fun MessageInput(
         
         IconButton(
             onClick = onSend,
-            enabled = enabled && value.trim().isNotEmpty()
+            enabled = enabled && value.trim().isNotEmpty(),
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                )
         ) {
             Icon(
                 imageVector = Icons.Default.Send,
                 contentDescription = stringResource(R.string.send_button_description),
-                tint = if (enabled && value.trim().isNotEmpty()) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                }
+                tint = Color.White
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun TranscriptViewPreview() {
+    val sampleTranscript = listOf(
+        TranscriptItem(id = "1", text = "Hello! How can I assist you today?", isUser = false),
+        TranscriptItem(id = "2", text = "I need help with my account", isUser = true),
+        TranscriptItem(id = "3", text = "I'd be happy to help you with your account. What specific issue are you experiencing?", isUser = false),
+        TranscriptItem(id = "4", text = "I can't log in", isUser = true)
+    )
+
+    val sampleSettings = WidgetSettings(
+        agentThinkingText = "AI is thinking...",
+        speakToInterruptText = "Speak to interrupt"
+    )
+
+    VoiceAIWidgetTheme(darkTheme = false) {
+        TranscriptDialogContent(
+            settings = sampleSettings,
+            transcriptItems = sampleTranscript,
+            userInput = "",
+            isConnected = true,
+            isMuted = false,
+            agentStatus = AgentStatus.Waiting,
+            audioLevels = listOf(0.2f, 0.4f, 0.6f, 0.8f, 0.5f, 0.3f, 0.7f, 0.9f, 0.4f, 0.2f, 0.5f, 0.3f),
+            onUserInputChange = {},
+            onSendMessage = {},
+            onToggleMute = {},
+            onEndCall = {},
+            onCollapse = {},
+            iconOnly = false
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TranscriptViewDarkPreview() {
+    val sampleTranscript = listOf(
+        TranscriptItem(id = "1", text = "Hello! How can I assist you today?", isUser = false),
+        TranscriptItem(id = "2", text = "I need help with my account", isUser = true),
+        TranscriptItem(id = "3", text = "I'd be happy to help you with your account. What specific issue are you experiencing?", isUser = false),
+        TranscriptItem(id = "4", text = "I can't log in", isUser = true)
+    )
+
+    val sampleSettings = WidgetSettings(
+        agentThinkingText = "AI is thinking...",
+        speakToInterruptText = "Speak to interrupt"
+    )
+
+    VoiceAIWidgetTheme(darkTheme = true) {
+        TranscriptDialogContent(
+            settings = sampleSettings,
+            transcriptItems = sampleTranscript,
+            userInput = "",
+            isConnected = true,
+            isMuted = false,
+            agentStatus = AgentStatus.Waiting,
+            audioLevels = listOf(0.2f, 0.4f, 0.6f, 0.8f, 0.5f, 0.3f, 0.7f, 0.9f, 0.4f, 0.2f, 0.5f, 0.3f),
+            onUserInputChange = {},
+            onSendMessage = {},
+            onToggleMute = {},
+            onEndCall = {},
+            onCollapse = {},
+            iconOnly = false
+        )
     }
 }

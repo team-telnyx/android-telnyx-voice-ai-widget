@@ -1,7 +1,9 @@
 package com.telnyx.voiceai.widget.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallEnd
@@ -11,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
@@ -87,11 +90,15 @@ fun ExpandedWidget(
                     onClick = onToggleMute,
                     modifier = Modifier
                         .size(48.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape
+                        )
                 ) {
                     Icon(
                         imageVector = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
                         contentDescription = if (isMuted) stringResource(R.string.unmute_button_description) else stringResource(R.string.mute_button_description),
-                        tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 
@@ -101,11 +108,15 @@ fun ExpandedWidget(
                     modifier = Modifier
                         .testTag("end_call_button")
                         .size(48.dp)
+                        .background(
+                            color = Color.Red,
+                            shape = CircleShape
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Default.CallEnd,
                         contentDescription = stringResource(R.string.end_call_button_description),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = Color.White
                     )
                 }
             }

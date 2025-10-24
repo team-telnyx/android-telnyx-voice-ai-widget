@@ -9,11 +9,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 private val LightTranscriptColors = TranscriptColors(
-    backgroundColor = Color(0xFFFFFFFF)
+    backgroundColor = Color(0xFFFFFFFF),
+    topSectionColor = Color(0xFFFFFDF4), // Light mode: #fffdf4
+    bottomSectionColor = Color(0xFFE3E0CE), // Light mode: #e3e0ce
+    textBoxColor = Color(0xFFFFFDF4) // Light mode: #fffdf4
 )
 
 private val DarkTranscriptColors = TranscriptColors(
-    backgroundColor = Color(0xFF1C1B1F)
+    backgroundColor = Color(0xFF1C1B1F),
+    topSectionColor = Color(0xFF000000), // Dark mode: black
+    bottomSectionColor = Color(0xFF38383A), // Dark mode: #38383a
+    textBoxColor = Color(0xFF222127) // Dark mode: #222127
 )
 
 val LocalTranscriptColors = staticCompositionLocalOf { LightTranscriptColors }
