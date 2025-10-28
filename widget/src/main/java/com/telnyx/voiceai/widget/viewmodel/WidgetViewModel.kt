@@ -25,13 +25,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private const val MAX_LEVELS = 12
+
 /**
  * ViewModel for managing the AI Assistant Widget state and interactions
  */
 class WidgetViewModel : ViewModel() {
 
-    private val AI_ASSISTANT_DESTINATION = "ai-assistant"
-    private val MAX_LEVELS = 20
+    private val aiAssistantDestination = "ai-assistant"
 
     private var iconOnly: Boolean = false
 
@@ -43,7 +44,7 @@ class WidgetViewModel : ViewModel() {
 
     private val _transcriptItems = MutableStateFlow<List<TranscriptItem>>(emptyList())
     val transcriptItems: StateFlow<List<TranscriptItem>> = _transcriptItems.asStateFlow()
-    
+
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
 
@@ -87,6 +88,7 @@ class WidgetViewModel : ViewModel() {
 
 
             } catch (e: Exception) {
+                Log.e("AiAssistantWidget", "Initialization error: ${e.message}", e)
                 _widgetState.value = WidgetState.Error("", ErrorType.Initialization)
             }
         }
@@ -105,7 +107,7 @@ class WidgetViewModel : ViewModel() {
                     currentCall = telnyxClient.newInvite(
                         "",
                         "",
-                        AI_ASSISTANT_DESTINATION,
+                        aiAssistantDestination,
                         "",
                         debug = true
                     )
@@ -145,6 +147,7 @@ class WidgetViewModel : ViewModel() {
             isConnected = false
             isMuted = false
             _transcriptItems.value = emptyList()
+            _audioLevels.value = mutableListOf()
             _widgetState.value = WidgetState.Collapsed(settings)
         }
     }

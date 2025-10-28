@@ -5,7 +5,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+private val LightTranscriptColors = TranscriptColors(
+    backgroundColor = Color(0xFFFFFFFF),
+    topSectionColor = Color(0xFFFFFDF4), // Light mode: #fffdf4
+    bottomSectionColor = Color(0xFFE3E0CE), // Light mode: #e3e0ce
+    textBoxColor = Color(0xFFFFFDF4) // Light mode: #fffdf4
+)
+
+private val DarkTranscriptColors = TranscriptColors(
+    backgroundColor = Color(0xFF1C1B1F),
+    topSectionColor = Color(0xFF000000), // Dark mode: black
+    bottomSectionColor = Color(0xFF38383A), // Dark mode: #38383a
+    textBoxColor = Color(0xFF222127) // Dark mode: #222127
+)
+
+val LocalTranscriptColors = staticCompositionLocalOf { LightTranscriptColors }
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF6366F1),
@@ -37,6 +54,40 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF475569)
 )
 
+// Define gradient color schemes
+val audioGradients = mapOf(
+    "verdant" to listOf(
+        Color(0xFFD3FFA6), // Light green
+        Color(0xFF036B5B), // Dark teal
+        Color(0xFFD3FFA6), // Light green
+    ),
+    "twilight" to listOf(
+        Color(0xFF81B9FF), // Light blue
+        Color(0xFF371A5E), // Dark purple
+        Color(0xFF81B9FF), // Light blue
+    ),
+    "bloom" to listOf(
+        Color(0xFFFFD4FE), // Light pink
+        Color(0xFFFD05F9), // Bright magenta
+        Color(0xFFFFD4FE), // Light pink
+    ),
+    "mystic" to listOf(
+        Color(0xFF1F023A), // Dark purple
+        Color(0xFFCA76FF), // Light purple
+        Color(0xFF1F023A), // Dark purple
+    ),
+    "flare" to listOf(
+        Color(0xFFFFFFFF), // White
+        Color(0xFFFC5F00), // Orange
+        Color(0xFFFFFFFF), // White
+    ),
+    "glacier" to listOf(
+        Color(0xFF4CE5F2), // Light cyan
+        Color(0xFF005A98), // Dark blue
+        Color(0xFF4CE5F2), // Light cyan
+    )
+)
+
 @Composable
 fun VoiceAIWidgetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -47,9 +98,18 @@ fun VoiceAIWidgetTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val transcriptColors = when {
+        darkTheme -> DarkTranscriptColors
+        else -> LightTranscriptColors
+    }
+
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalTranscriptColors provides transcriptColors
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

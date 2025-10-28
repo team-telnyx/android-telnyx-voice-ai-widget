@@ -17,6 +17,9 @@
     <string name="end_call_button_description">End Call</string>
     <string name="collapse_button_description">Collapse</string>
     <string name="send_button_description">Send</string>
+
+    <!-- Transcript View -->
+    <string name="conversation_title">Conversation</string>
     
     <!-- Message Input -->
     <string name="message_input_placeholder">Type a message…</string>
