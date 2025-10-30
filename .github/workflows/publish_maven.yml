@@ -40,7 +40,7 @@ jobs:
       env:
         GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
       run: |
-        echo "$GPG_KEY_CONTENTS" | base64 -d > signing-key.gpg
+        echo "$GPG_KEY_CONTENTS" > signing-key.gpg
         
     - name: Import GPG key
       run: |
