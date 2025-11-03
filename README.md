@@ -306,6 +306,101 @@ The widget automatically fetches configuration from your Telnyx Assistant settin
 - Audio visualizer settings
 - Status messages
 
+## Call Parameters
+
+You can customize call behavior by providing optional `CallParams` when initializing the widget. This allows you to override default call settings such as caller information and destination details.
+
+### CallParams Properties
+
+```kotlin
+data class CallParams(
+    val destinationNumber: String? = null,
+    val callerNumber: String? = null,
+    val callerName: String? = null,
+    val customHeaders: Map<String, String>? = null
+)
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `destinationNumber` | String? | Override the default destination number for the call |
+| `callerNumber` | String? | Set the caller number to display for the call |
+| `callerName` | String? | Set the caller name to display for the call |
+| `customHeaders` | Map<String, String>? | Additional custom headers to include with the call |
+
+### Usage Examples
+
+#### Basic Call Parameters
+
+```kotlin
+import com.telnyx.voiceai.widget.model.CallParams
+
+@Composable
+fun MyScreen() {
+    val callParams = CallParams(
+        callerName = "John Doe",
+        callerNumber = "+1234567890"
+    )
+    
+    AIAssistantWidget(
+        assistantId = "your-assistant-id",
+        callParams = callParams,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+```
+
+#### Advanced Configuration with Custom Headers
+
+```kotlin
+val callParams = CallParams(
+    callerName = "Customer Support",
+    callerNumber = "+1-800-SUPPORT",
+    destinationNumber = "custom-destination", // Override default AI assistant destination
+    customHeaders = mapOf(
+        "X-User-ID" to "user123",
+        "X-Session-ID" to "session456",
+        "X-Custom-Header" to "custom-value"
+    )
+)
+
+AIAssistantWidget(
+    assistantId = "your-assistant-id",
+    callParams = callParams,
+    shouldInitialize = true
+)
+```
+
+#### Dynamic Call Parameters
+
+```kotlin
+@Composable
+fun DynamicCallWidget(userId: String, userName: String) {
+    val callParams = remember(userId, userName) {
+        CallParams(
+            callerName = userName,
+            callerNumber = "+1234567890",
+            customHeaders = mapOf(
+                "X-User-ID" to userId,
+                "X-Timestamp" to System.currentTimeMillis().toString()
+            )
+        )
+    }
+    
+    AIAssistantWidget(
+        assistantId = "your-assistant-id",
+        callParams = callParams
+    )
+}
+```
+
+### Important Notes
+
+- All `CallParams` properties are optional
+- If not provided, the widget uses default values
+- `customHeaders` are stored but may require additional SDK support for full functionality
+- Parameters are applied when a call is initiated, not during widget initialization
+
 ## Example App
 
 Check out the included example app in the `example` module for a complete implementation:

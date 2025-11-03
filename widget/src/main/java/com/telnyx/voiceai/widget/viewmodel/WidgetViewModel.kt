@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.telnyx.voiceai.widget.model.CallParams
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.TranscriptItem
@@ -35,6 +36,7 @@ class WidgetViewModel : ViewModel() {
     private val aiAssistantDestination = "ai-assistant"
 
     private var iconOnly: Boolean = false
+    private var callParams: CallParams? = null
 
     private val _widgetState = MutableStateFlow<WidgetState>(WidgetState.Idle)
     val widgetState: StateFlow<WidgetState> = _widgetState.asStateFlow()
@@ -62,8 +64,9 @@ class WidgetViewModel : ViewModel() {
     /**
      * Initialize the widget with assistant ID
      */
-    fun initialize(context: Context, assistantId: String, iconOnly: Boolean = false) {
+    fun initialize(context: Context, assistantId: String, iconOnly: Boolean = false, callParams: CallParams? = null) {
         this.iconOnly = iconOnly
+        this.callParams = callParams
         viewModelScope.launch {
             try {
                 _widgetState.value = WidgetState.Loading
@@ -104,11 +107,20 @@ class WidgetViewModel : ViewModel() {
             
             viewModelScope.launch {
                 try {
+                    // Use callParams if provided, otherwise use defaults
+                    val callerName = callParams?.callerName ?: ""
+                    val callerNumber = callParams?.callerNumber ?: ""
+                    val destinationNumber = callParams?.destinationNumber ?: aiAssistantDestination
+                    val clientState = "" // Keep empty for now, could be extended later
+                    
+                    // TODO: Handle customHeaders from callParams when TelnyxClient supports it
+                    // For now, customHeaders are stored but not used in the call creation
+                    
                     currentCall = telnyxClient.newInvite(
-                        "",
-                        "",
-                        aiAssistantDestination,
-                        "",
+                        callerName,
+                        callerNumber,
+                        destinationNumber,
+                        clientState,
                         debug = true
                     )
 
