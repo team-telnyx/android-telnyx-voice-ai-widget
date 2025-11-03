@@ -113,7 +113,6 @@ class WidgetViewModel : ViewModel() {
                     val destinationNumber = callParams?.destinationNumber ?: aiAssistantDestination
                     val clientState = "" // Keep empty for now, could be extended later
                     
-                    // TODO: Handle customHeaders from callParams when TelnyxClient supports it
                     // For now, customHeaders are stored but not used in the call creation
                     
                     currentCall = telnyxClient.newInvite(
