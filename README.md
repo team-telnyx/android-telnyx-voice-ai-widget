@@ -308,7 +308,13 @@ The widget automatically fetches configuration from your Telnyx Assistant settin
 
 ## Call Parameters
 
-You can customize call behavior by providing optional `CallParams` when initializing the widget. This allows you to override default call settings such as caller information and destination details.
+You can add optional parameters by utilizing the 'CallParams' when initializing the widget. This is helpful for providing additional context to calls when referencing them via logs. Regardless of destinationNumber provided, the call will always be made to the assistant the widget was initialized with.
+
+In order to pass dynamic variables to your widget, such as a name or account number, custom headers can be used which are SIP headers that will be passed to the AI agent. Headers need to start with the 'X-' prefix.
+
+Once added, they will be mapped to dynamic variables in the AI assisntant (e.g., X-Account-Number becomes {{account_number}}).
+
+Note: Hyphens in header names are converted to underscores in variable names.
 
 ### CallParams Properties
 
@@ -356,7 +362,7 @@ fun MyScreen() {
 val callParams = CallParams(
     callerName = "Customer Support",
     callerNumber = "+1-800-SUPPORT",
-    destinationNumber = "custom-destination", // Override default AI assistant destination
+    destinationNumber = "custom-destination",
     customHeaders = mapOf(
         "X-User-ID" to "user123",
         "X-Session-ID" to "session456",
@@ -382,7 +388,8 @@ fun DynamicCallWidget(userId: String, userName: String) {
             callerNumber = "+1234567890",
             customHeaders = mapOf(
                 "X-User-ID" to userId,
-                "X-Timestamp" to System.currentTimeMillis().toString()
+                "X-Session-ID" to "session456",
+                "X-Custom-Header" to "custom-value"
             )
         )
     }
@@ -397,8 +404,6 @@ fun DynamicCallWidget(userId: String, userName: String) {
 ### Important Notes
 
 - All `CallParams` properties are optional
-- If not provided, the widget uses default values
-- `customHeaders` are stored but may require additional SDK support for full functionality
 - Parameters are applied when a call is initiated, not during widget initialization
 
 ## Example App
