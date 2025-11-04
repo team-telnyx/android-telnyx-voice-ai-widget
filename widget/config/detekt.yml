@@ -248,7 +248,7 @@ exceptions:
     ignoreLabeled: false
   SwallowedException:
     active: true
-    excludes: ['**/test/**']
+    excludes: ['**/test/**', '**/androidTest/**']
     ignoredExceptionTypes:
       - 'InterruptedException'
       - 'MalformedURLException'
