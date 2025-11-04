@@ -316,6 +316,8 @@ Once added, they will be mapped to dynamic variables in the AI assisntant (e.g.,
 
 Note: Hyphens in header names are converted to underscores in variable names.
 
+[dynamic variables](https://developers.telnyx.com/docs/inference/ai-assistants/dynamic-variables)
+
 ### CallParams Properties
 
 ```kotlin
