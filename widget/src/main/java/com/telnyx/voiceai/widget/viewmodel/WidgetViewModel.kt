@@ -259,12 +259,12 @@ class WidgetViewModel : ViewModel() {
         val data = response.data
         when (data?.method) {
             SocketMethod.CLIENT_READY.methodName -> handleClientReady()
-            SocketMethod.LOGIN.methodName -> handleLogin(data)
-            SocketMethod.INVITE.methodName -> handleInvite(data)
-            SocketMethod.ANSWER.methodName -> handleAnswer(data)
-            SocketMethod.RINGING.methodName -> handleRinging(data)
+            SocketMethod.LOGIN.methodName -> handleLogin()
+            SocketMethod.INVITE.methodName -> handleInvite()
+            SocketMethod.ANSWER.methodName -> handleAnswer()
+            SocketMethod.RINGING.methodName -> handleRinging()
             SocketMethod.MEDIA.methodName -> handleMedia()
-            SocketMethod.BYE.methodName -> handleBye(data)
+            SocketMethod.BYE.methodName -> handleBye()
             SocketMethod.AI_CONVERSATION.methodName -> handleAiConversation(data)
         }
     }
@@ -302,15 +302,15 @@ class WidgetViewModel : ViewModel() {
         _widgetState.value = WidgetState.Collapsed(_widgetSettings.value)
     }
     
-    private fun handleLogin(data: ReceivedMessageBody) {
+    private fun handleLogin() {
         Log.d("AiAssistantWidget", "Login received")
     }
     
-    private fun handleInvite(data: ReceivedMessageBody) {
+    private fun handleInvite() {
         Log.d("AiAssistantWidget", "Invite received")
     }
     
-    private fun handleAnswer(data: ReceivedMessageBody) {
+    private fun handleAnswer() {
         Log.d("AiAssistantWidget", "Answer received")
         isConnected = true
         val currentState = _widgetState.value
@@ -335,7 +335,7 @@ class WidgetViewModel : ViewModel() {
         }
     }
     
-    private fun handleRinging(data: ReceivedMessageBody) {
+    private fun handleRinging() {
         Log.d("AiAssistantWidget", "Ringing received")
     }
     
@@ -343,7 +343,7 @@ class WidgetViewModel : ViewModel() {
         Log.d("AiAssistantWidget", "Media received")
     }
     
-    private fun handleBye(data: ReceivedMessageBody) {
+    private fun handleBye() {
         Log.d("AiAssistantWidget", "Bye received")
         isConnected = false
         val currentState = _widgetState.value

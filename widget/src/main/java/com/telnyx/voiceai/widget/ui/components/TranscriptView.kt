@@ -17,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -57,7 +56,6 @@ fun TranscriptView(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
-    modifier: Modifier = Modifier,
     iconOnly: Boolean = false
 ) {
     Dialog(
@@ -447,6 +445,7 @@ private fun MessageInput(
 }
 
 @Preview
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun TranscriptViewPreview() {
     val sampleTranscript = listOf(
@@ -481,6 +480,7 @@ private fun TranscriptViewPreview() {
 }
 
 @Preview
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun TranscriptViewDarkPreview() {
     val sampleTranscript = listOf(
