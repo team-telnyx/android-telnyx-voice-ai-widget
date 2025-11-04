@@ -16,7 +16,7 @@ jobs:
       - name: detekt
         uses: alaegin/Detekt-Action@v1.21.0-RC2
         with:
-          github_token: ${{ secrets.GIT_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           detekt_config: widget/config/detekt.yml
           detekt_excludes: '**/build/**,**/.idea/**,**compose_app**,**xml_app**,**connection_service_app**'
 
