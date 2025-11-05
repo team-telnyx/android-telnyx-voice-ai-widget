@@ -87,7 +87,8 @@ data class TranscriptItem(
     val id: String,
     val text: String,
     val isUser: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val imageUrl: String? = null
 )
 
 enum class ErrorType {

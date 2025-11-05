@@ -89,6 +89,7 @@ fun AIAssistantWidget(
     val widgetSettings by viewModel.widgetSettings.collectAsState()
     val transcriptItems by viewModel.transcriptItems.collectAsState()
     val userInput by viewModel.userInput.collectAsState()
+    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
     val audioLevels by viewModel.audioLevels.collectAsState()
     var floatingButtonErrorState by remember { mutableStateOf(null as WidgetState.Error?) }
 
@@ -194,6 +195,9 @@ fun AIAssistantWidget(
                     onToggleMute = { viewModel.toggleMute() },
                     onEndCall = { viewModel.endCall() },
                     onCollapse = { viewModel.collapseFromTranscriptView() },
+                    selectedImageUri = selectedImageUri,
+                    onImageSelected = { viewModel.setSelectedImage(it) },
+                    onImageCleared = { viewModel.clearSelectedImage() },
                     iconOnly = iconOnly
                 )
             }

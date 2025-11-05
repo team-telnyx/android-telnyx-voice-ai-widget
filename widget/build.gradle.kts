@@ -71,8 +71,8 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
-    // Telnyx WebRTC SDK
-    implementation("com.github.team-telnyx:telnyx-webrtc-android:3.2.0")
+    // Telnyx WebRTC SDK - Using WEBRTC-3060 branch for image support
+    implementation("com.github.team-telnyx:telnyx-webrtc-android:WEBRTC-3060-SNAPSHOT")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

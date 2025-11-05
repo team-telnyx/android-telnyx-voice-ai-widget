@@ -17,6 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -57,6 +60,9 @@ fun TranscriptView(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
+    selectedImageUri: String? = null,
+    onImageSelected: (String?) -> Unit = {},
+    onImageCleared: () -> Unit = {},
     modifier: Modifier = Modifier,
     iconOnly: Boolean = false
 ) {
@@ -81,6 +87,9 @@ fun TranscriptView(
             onToggleMute = onToggleMute,
             onEndCall = onEndCall,
             onCollapse = onCollapse,
+            selectedImageUri = selectedImageUri,
+            onImageSelected = onImageSelected,
+            onImageCleared = onImageCleared,
             iconOnly = iconOnly
         )
     }
@@ -100,6 +109,9 @@ private fun TranscriptDialogContent(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
+    selectedImageUri: String? = null,
+    onImageSelected: (String?) -> Unit = {},
+    onImageCleared: () -> Unit = {},
     iconOnly: Boolean = false
 ) {
     val listState = rememberLazyListState()
@@ -204,6 +216,9 @@ private fun TranscriptDialogContent(
                     onSend = onSendMessage,
                     enabled = isConnected,
                     backgroundColor = transcriptColors.textBoxColor,
+                    selectedImageUri = selectedImageUri,
+                    onImageSelected = onImageSelected,
+                    onImageCleared = onImageCleared,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -348,12 +363,38 @@ private fun TranscriptMessage(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = item.text,
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    // Display image if present
+                    item.imageUrl?.let { imageUrl ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Message image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        
+                        if (item.text.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    // Display text if present
+                    if (item.text.isNotEmpty()) {
+                        Text(
+                            text = item.text,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         } else {
             // User message with avatar on right
@@ -371,12 +412,38 @@ private fun TranscriptMessage(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                Text(
-                    text = item.text,
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    // Display image if present
+                    item.imageUrl?.let { imageUrl ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Message image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        
+                        if (item.text.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    // Display text if present
+                    if (item.text.isNotEmpty()) {
+                        Text(
+                            text = item.text,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -399,50 +466,153 @@ private fun MessageInput(
     onSend: () -> Unit,
     enabled: Boolean,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    selectedImageUri: String? = null,
+    onImageSelected: (String?) -> Unit = {},
+    onImageCleared: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        modifier = modifier
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.weight(1f),
-            placeholder = {
-                Text(
-                    text = if (enabled) stringResource(R.string.message_input_placeholder) else stringResource(R.string.message_input_disconnected),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            enabled = enabled,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = { onSend() }),
-            shape = RoundedCornerShape(24.dp),
-            maxLines = 3,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = backgroundColor,
-                unfocusedContainerColor = backgroundColor,
-                disabledContainerColor = backgroundColor
-            )
-        )
-        
-        IconButton(
-            onClick = onSend,
-            enabled = enabled && value.trim().isNotEmpty(),
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Send,
-                contentDescription = stringResource(R.string.send_button_description),
-                tint = Color.White
-            )
+        // Image preview if selected
+        selectedImageUri?.let { imageUri ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Selected image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 120.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    
+                    // Remove image button
+                    IconButton(
+                        onClick = onImageCleared,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .background(
+                                color = Color.Black.copy(alpha = 0.6f),
+                                shape = CircleShape
+                            )
+                            .size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove image",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
         }
+        
+        // Input row
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                placeholder = {
+                    Text(
+                        text = if (enabled) stringResource(R.string.message_input_placeholder) else stringResource(R.string.message_input_disconnected),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                enabled = enabled,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { onSend() }),
+                shape = RoundedCornerShape(24.dp),
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = backgroundColor,
+                    unfocusedContainerColor = backgroundColor,
+                    disabledContainerColor = backgroundColor
+                )
+            )
+            
+            // Image picker button
+            var showImagePicker by remember { mutableStateOf(false) }
+            
+            IconButton(
+                onClick = { showImagePicker = true },
+                enabled = enabled,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = "Add image",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Send button
+            IconButton(
+                onClick = onSend,
+                enabled = enabled && (value.trim().isNotEmpty() || selectedImageUri != null),
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = stringResource(R.string.send_button_description),
+                    tint = Color.White
+                )
+            }
+            
+            // Image picker launcher
+            if (showImagePicker) {
+                ImagePickerDialog(
+                    onImageSelected = { uri ->
+                        onImageSelected(uri)
+                        showImagePicker = false
+                    },
+                    onDismiss = { showImagePicker = false }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImagePickerDialog(
+    onImageSelected: (String?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            // Convert URI to base64 string using ImageUtils
+            val base64Image = com.telnyx.voiceai.widget.utils.ImageUtils.uriToBase64(context, selectedUri)
+            onImageSelected(base64Image)
+        } ?: onDismiss()
+    }
+    
+    LaunchedEffect(Unit) {
+        launcher.launch("image/*")
     }
 }
 

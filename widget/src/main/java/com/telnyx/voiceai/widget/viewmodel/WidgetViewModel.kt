@@ -48,6 +48,9 @@ class WidgetViewModel : ViewModel() {
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
 
+    private val _selectedImageUri = MutableStateFlow<String?>(null)
+    val selectedImageUri: StateFlow<String?> = _selectedImageUri.asStateFlow()
+
     private val _audioLevels = MutableStateFlow<MutableList<Float>>(emptyList<Float>().toMutableList())
     val audioLevels: StateFlow<List<Float>> = _audioLevels.asStateFlow()
 
@@ -83,7 +86,15 @@ class WidgetViewModel : ViewModel() {
                 }
 
                 telnyxClient.transcriptUpdateFlow.collect { transcript ->
-                    _transcriptItems.value = transcript.map { TranscriptItem(it.id, it.content, (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), it.timestamp.time) }
+                    _transcriptItems.value = transcript.map { 
+                        TranscriptItem(
+                            id = it.id, 
+                            text = it.content, 
+                            isUser = (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), 
+                            timestamp = it.timestamp.time,
+                            imageUrl = it.imageUrl
+                        ) 
+                    }
                 }
 
 
@@ -209,16 +220,37 @@ class WidgetViewModel : ViewModel() {
     }
     
     /**
-     * Send user message
+     * Send user message with optional image
      */
     fun sendMessage() {
         val message = _userInput.value.trim()
-        if (message.isNotEmpty()) {
+        val imageUri = _selectedImageUri.value
+        
+        if (message.isNotEmpty() || imageUri != null) {
             viewModelScope.launch {
-                telnyxClient.sendAIAssistantMessage(message)
+                if (imageUri != null) {
+                    telnyxClient.sendAIAssistantMessage(message, imageUri)
+                } else {
+                    telnyxClient.sendAIAssistantMessage(message)
+                }
             }
             _userInput.value = ""
+            _selectedImageUri.value = null
         }
+    }
+    
+    /**
+     * Set selected image URI
+     */
+    fun setSelectedImage(imageUri: String?) {
+        _selectedImageUri.value = imageUri
+    }
+    
+    /**
+     * Clear selected image
+     */
+    fun clearSelectedImage() {
+        _selectedImageUri.value = null
     }
     
     /**
