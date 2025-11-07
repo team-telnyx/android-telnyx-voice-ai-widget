@@ -118,14 +118,14 @@ publishing {
                 name.set("Telnyx Android Voice AI Widget")
                 description.set("A standalone Android widget for Telnyx Voice AI Assistant integration")
                 url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
-                
+
                 licenses {
                     license {
                         name.set("MIT License")
                         url.set("https://opensource.org/licenses/MIT")
                     }
                 }
-                
+
                 developers {
                     developer {
                         id.set("telnyx")
@@ -133,12 +133,23 @@ publishing {
                         email.set("support@telnyx.com")
                     }
                 }
-                
+
                 scm {
                     connection.set("scm:git:git://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
                     developerConnection.set("scm:git:ssh://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
                     url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
                 }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "Central"
+            url = uri("https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC")
+            credentials {
+                username = System.getenv("CENTRAL_USERNAME")
+                password = System.getenv("CENTRAL_TOKEN")
             }
         }
     }
