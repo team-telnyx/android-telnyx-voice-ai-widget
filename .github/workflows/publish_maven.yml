@@ -38,9 +38,16 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Configure GPG
+      run: |
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        echo "use-agent" >> ~/.gnupg/gpg.conf
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        gpg-connect-agent reloadagent /bye
+
     - name: Publish to Maven Central
       env:
         CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
         CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
         SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      run: ./gradlew publishAllPublicationsToCentralRepository
+      run: ./gradlew publishAllPublicationsToCentralRepository --no-daemon
