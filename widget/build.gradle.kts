@@ -156,10 +156,18 @@ publishing {
 }
 
 signing {
-    useInMemoryPgpKeys(
-        System.getenv("SIGNING_KEY_ID"),
-        System.getenv("GPG_KEY_CONTENTS"),
-        System.getenv("SIGNING_PASSWORD")
-    )
+    // Use GPG command (works with keys imported by actions/setup-java)
+    if (System.getenv("CI") == "true") {
+        useGpgCmd()
+    } else {
+        // Local development: use in-memory keys if available
+        val signingKeyId = System.getenv("SIGNING_KEY_ID")
+        val signingKey = System.getenv("GPG_KEY_CONTENTS")
+        val signingPassword = System.getenv("SIGNING_PASSWORD")
+
+        if (signingKeyId != null && signingKey != null && signingPassword != null) {
+            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        }
+    }
     sign(publishing.publications)
 }
