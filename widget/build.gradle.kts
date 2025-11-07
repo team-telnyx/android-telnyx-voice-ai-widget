@@ -146,11 +146,7 @@ publishing {
     repositories {
         maven {
             name = "Central"
-            url = uri("https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC")
-            credentials {
-                username = System.getenv("CENTRAL_USERNAME")
-                password = System.getenv("CENTRAL_TOKEN")
-            }
+            url = uri(layout.buildDirectory.dir("maven-central-publish"))
         }
     }
 }

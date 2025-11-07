@@ -45,10 +45,22 @@ jobs:
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
         gpg-connect-agent reloadagent /bye
 
-    - name: Publish to Maven Central
+    - name: Publish to local repository
       env:
-        CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-        CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
         SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
         SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       run: ./gradlew publishAllPublicationsToCentralRepository --no-daemon
+
+    - name: Create bundle for Central Portal
+      run: |
+        cd widget/build/maven-central-publish
+        zip -r ../../../maven-central-bundle.zip .
+
+    - name: Upload to Maven Central Portal
+      run: |
+        curl --request POST \
+          --verbose \
+          --form bundle=@maven-central-bundle.zip \
+          --user '${{ secrets.CENTRAL_USERNAME }}:${{ secrets.CENTRAL_TOKEN }}' \
+          --fail-with-body \
+          'https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC'
