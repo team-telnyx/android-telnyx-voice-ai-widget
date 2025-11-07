@@ -156,14 +156,20 @@ publishing {
 }
 
 signing {
+    val signingPassword = System.getenv("SIGNING_PASSWORD")
+
     // Use GPG command (works with keys imported by actions/setup-java)
     if (System.getenv("CI") == "true") {
         useGpgCmd()
+        // Configure GPG to use the passphrase from environment
+        if (signingPassword != null) {
+            extra["signing.gnupg.keyName"] = System.getenv("SIGNING_KEY_ID") ?: ""
+            extra["signing.gnupg.passphrase"] = signingPassword
+        }
     } else {
         // Local development: use in-memory keys if available
         val signingKeyId = System.getenv("SIGNING_KEY_ID")
         val signingKey = System.getenv("GPG_KEY_CONTENTS")
-        val signingPassword = System.getenv("SIGNING_PASSWORD")
 
         if (signingKeyId != null && signingKey != null && signingPassword != null) {
             useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
