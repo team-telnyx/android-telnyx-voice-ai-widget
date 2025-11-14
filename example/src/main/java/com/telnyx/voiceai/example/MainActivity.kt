@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.telnyx.voiceai.example.ui.theme.VoiceAIWidgetExampleTheme
 import com.telnyx.voiceai.widget.AIAssistantWidget
+import com.telnyx.voiceai.widget.model.CallParams
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +39,19 @@ fun ExampleApp() {
     var showAlertDialog by remember { mutableStateOf(false) }
     var showWidget by remember { mutableStateOf(false) }
     var iconOnly by remember { mutableStateOf(false) }
+    
+    // Example CallParams - you can customize these values
+    val callParams = remember {
+        CallParams(
+            callerName = "John Doe",
+            callerNumber = "+1234567890",
+            destinationNumber = null, // Use default AI assistant destination
+            customHeaders = mapOf(
+                "X-Custom-Header" to "example-value",
+                "X-User-ID" to "user123"
+            )
+        )
+    }
     
     Scaffold(
         topBar = {
@@ -150,6 +164,7 @@ fun ExampleApp() {
                 assistantId = assistantId,
                 shouldInitialize = showWidget,
                 iconOnly = iconOnly,
+                callParams = callParams,
                 modifier = Modifier.fillMaxWidth()
             )
 
