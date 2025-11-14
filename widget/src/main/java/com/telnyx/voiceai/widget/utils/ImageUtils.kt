@@ -36,7 +36,31 @@ object ImageUtils {
             null
         }
     }
-    
+
+    /**
+     * Convert base64 encoded string to Bitmap
+     * Supports both raw base64 strings and data URL format (e.g., "data:image/jpeg;base64,...")
+     */
+    fun base64ToBitmap(base64String: String): Bitmap? {
+        return try {
+            // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+            val base64Data = if (base64String.contains(",")) {
+                base64String.substring(base64String.indexOf(",") + 1)
+            } else {
+                base64String
+            }
+
+            // Decode base64 string to byte array
+            val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
+
+            // Convert byte array to Bitmap
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     /**
      * Resize bitmap to fit within specified dimensions while maintaining aspect ratio
      */
@@ -63,23 +87,5 @@ object ImageUtils {
         }
         
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
-    }
-    
-    /**
-     * Check if the URI is a valid image
-     */
-    fun isValidImageUri(context: Context, uri: Uri): Boolean {
-        return try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            inputStream?.use { stream ->
-                val options = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
-                }
-                BitmapFactory.decodeStream(stream, null, options)
-                options.outWidth > 0 && options.outHeight > 0
-            } ?: false
-        } catch (e: Exception) {
-            false
-        }
     }
 }

@@ -2,9 +2,9 @@ package com.telnyx.voiceai.widget.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -41,6 +41,7 @@ import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.voiceai.widget.ui.theme.LocalTranscriptColors
 import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
+import com.telnyx.voiceai.widget.utils.ImageUtils
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
@@ -60,9 +61,9 @@ fun TranscriptView(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
-    selectedImageUri: String? = null,
-    onImageSelected: (String?) -> Unit = {},
-    onImageCleared: () -> Unit = {},
+    selectedImageUris: List<String> = emptyList(),
+    onImageSelected: (String) -> Unit = {},
+    onImageRemoved: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     iconOnly: Boolean = false
 ) {
@@ -87,9 +88,9 @@ fun TranscriptView(
             onToggleMute = onToggleMute,
             onEndCall = onEndCall,
             onCollapse = onCollapse,
-            selectedImageUri = selectedImageUri,
+            selectedImageUris = selectedImageUris,
             onImageSelected = onImageSelected,
-            onImageCleared = onImageCleared,
+            onImageRemoved = onImageRemoved,
             iconOnly = iconOnly
         )
     }
@@ -109,9 +110,9 @@ private fun TranscriptDialogContent(
     onToggleMute: () -> Unit,
     onEndCall: () -> Unit,
     onCollapse: () -> Unit,
-    selectedImageUri: String? = null,
-    onImageSelected: (String?) -> Unit = {},
-    onImageCleared: () -> Unit = {},
+    selectedImageUris: List<String> = emptyList(),
+    onImageSelected: (String) -> Unit = {},
+    onImageRemoved: (String) -> Unit = {},
     iconOnly: Boolean = false
 ) {
     val listState = rememberLazyListState()
@@ -216,9 +217,9 @@ private fun TranscriptDialogContent(
                     onSend = onSendMessage,
                     enabled = isConnected,
                     backgroundColor = transcriptColors.textBoxColor,
-                    selectedImageUri = selectedImageUri,
+                    selectedImageUris = selectedImageUris,
                     onImageSelected = onImageSelected,
-                    onImageCleared = onImageCleared,
+                    onImageRemoved = onImageRemoved,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -366,26 +367,36 @@ private fun TranscriptMessage(
                 Column(
                     modifier = Modifier.padding(12.dp)
                 ) {
-                    // Display image if present
-                    item.imageUrl?.let { imageUrl ->
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(imageUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Message image",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        
+                    // Display images if present
+                    item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(imageUrls) { imageUrl ->
+                                val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
+                                imagePreview?.let {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(it)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Message image",
+                                        modifier = Modifier
+                                            .wrapContentWidth()
+                                            .heightIn(max = 90.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                            }
+                        }
+
                         if (item.text.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
+
                     // Display text if present
                     if (item.text.isNotEmpty()) {
                         Text(
@@ -415,26 +426,36 @@ private fun TranscriptMessage(
                 Column(
                     modifier = Modifier.padding(12.dp)
                 ) {
-                    // Display image if present
-                    item.imageUrl?.let { imageUrl ->
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(imageUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Message image",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        
+                    // Display images if present
+                    item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(imageUrls) { imageUrl ->
+                                val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
+                                imagePreview?.let {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(it)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Image attached",
+                                        modifier = Modifier
+                                            .wrapContentWidth()
+                                            .heightIn(max = 90.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                            }
+                        }
+
                         if (item.text.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
+
                     // Display text if present
                     if (item.text.isNotEmpty()) {
                         Text(
@@ -466,53 +487,67 @@ private fun MessageInput(
     onSend: () -> Unit,
     enabled: Boolean,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    selectedImageUri: String? = null,
-    onImageSelected: (String?) -> Unit = {},
-    onImageCleared: () -> Unit = {},
+    selectedImageUris: List<String> = emptyList(),
+    onImageSelected: (String) -> Unit = {},
+    onImageRemoved: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
     ) {
-        // Image preview if selected
-        selectedImageUri?.let { imageUri ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(12.dp)
+        // Image previews if selected
+        if (selectedImageUris.isNotEmpty()) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Selected image",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 120.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                    
-                    // Remove image button
-                    IconButton(
-                        onClick = onImageCleared,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
-                            .background(
-                                color = Color.Black.copy(alpha = 0.6f),
-                                shape = CircleShape
-                            )
-                            .size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove image",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                items(selectedImageUris) { imageUri ->
+                    val imagePreview = remember(imageUri) { ImageUtils.base64ToBitmap(imageUri) }
+                    imagePreview?.let {
+                        Card(
+                            modifier = Modifier
+                                .size(90.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(it)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Selected image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                                // Remove button in top-right corner
+                                IconButton(
+                                    onClick = {
+                                        onImageRemoved(imageUri)
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(24.dp)
+                                        .padding(2.dp)
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.size(20.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.Red.copy(alpha = 0.6f)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Remove image",
+                                            tint = Color.White,
+                                            modifier = Modifier.padding(2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -523,6 +558,25 @@ private fun MessageInput(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Image picker button
+            var showImagePicker by remember { mutableStateOf(false) }
+
+            IconButton(
+                onClick = { showImagePicker = true },
+                enabled = enabled,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = "Add image",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             OutlinedTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -545,29 +599,10 @@ private fun MessageInput(
                 )
             )
             
-            // Image picker button
-            var showImagePicker by remember { mutableStateOf(false) }
-            
-            IconButton(
-                onClick = { showImagePicker = true },
-                enabled = enabled,
-                modifier = Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = CircleShape
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = "Add image",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
             // Send button
             IconButton(
                 onClick = onSend,
-                enabled = enabled && (value.trim().isNotEmpty() || selectedImageUri != null),
+                enabled = enabled && (value.trim().isNotEmpty() || selectedImageUris.isNotEmpty()),
                 modifier = Modifier
                     .background(
                         color = MaterialTheme.colorScheme.primary,
@@ -597,7 +632,7 @@ private fun MessageInput(
 
 @Composable
 private fun ImagePickerDialog(
-    onImageSelected: (String?) -> Unit,
+    onImageSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -606,11 +641,11 @@ private fun ImagePickerDialog(
     ) { uri: Uri? ->
         uri?.let { selectedUri ->
             // Convert URI to base64 string using ImageUtils
-            val base64Image = com.telnyx.voiceai.widget.utils.ImageUtils.uriToBase64(context, selectedUri)
-            onImageSelected(base64Image)
+            val base64Image = ImageUtils.uriToBase64(context, selectedUri)
+            base64Image?.let { onImageSelected(it) }
         } ?: onDismiss()
     }
-    
+
     LaunchedEffect(Unit) {
         launcher.launch("image/*")
     }
@@ -645,6 +680,9 @@ private fun TranscriptViewPreview() {
             onToggleMute = {},
             onEndCall = {},
             onCollapse = {},
+            selectedImageUris = emptyList(),
+            onImageSelected = {},
+            onImageRemoved = {},
             iconOnly = false
         )
     }
@@ -679,6 +717,9 @@ private fun TranscriptViewDarkPreview() {
             onToggleMute = {},
             onEndCall = {},
             onCollapse = {},
+            selectedImageUris = emptyList(),
+            onImageSelected = {},
+            onImageRemoved = {},
             iconOnly = false
         )
     }

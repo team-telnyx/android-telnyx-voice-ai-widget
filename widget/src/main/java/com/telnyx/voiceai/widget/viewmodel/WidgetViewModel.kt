@@ -48,8 +48,8 @@ class WidgetViewModel : ViewModel() {
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
 
-    private val _selectedImageUri = MutableStateFlow<String?>(null)
-    val selectedImageUri: StateFlow<String?> = _selectedImageUri.asStateFlow()
+    private val _selectedImageUris = MutableStateFlow<List<String>>(emptyList())
+    val selectedImageUris: StateFlow<List<String>> = _selectedImageUris.asStateFlow()
 
     private val _audioLevels = MutableStateFlow<MutableList<Float>>(emptyList<Float>().toMutableList())
     val audioLevels: StateFlow<List<Float>> = _audioLevels.asStateFlow()
@@ -86,13 +86,13 @@ class WidgetViewModel : ViewModel() {
                 }
 
                 telnyxClient.transcriptUpdateFlow.collect { transcript ->
-                    _transcriptItems.value = transcript.map { 
+                    _transcriptItems.value = transcript.map {
                         TranscriptItem(
                             id = it.id, 
                             text = it.content, 
                             isUser = (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), 
                             timestamp = it.timestamp.time,
-                            imageUrl = it.imageUrl
+                            images = it.images
                         ) 
                     }
                 }
@@ -220,37 +220,37 @@ class WidgetViewModel : ViewModel() {
     }
     
     /**
-     * Send user message with optional image
+     * Send user message with optional images
      */
     fun sendMessage() {
         val message = _userInput.value.trim()
-        val imageUri = _selectedImageUri.value
-        
-        if (message.isNotEmpty() || imageUri != null) {
+        val imageUris = _selectedImageUris.value
+
+        if (message.isNotEmpty() || imageUris.isNotEmpty()) {
             viewModelScope.launch {
-                if (imageUri != null) {
-                    telnyxClient.sendAIAssistantMessage(message, imageUri)
+                if (imageUris.isNotEmpty()) {
+                    telnyxClient.sendAIAssistantMessage(message, imageUris)
                 } else {
                     telnyxClient.sendAIAssistantMessage(message)
                 }
             }
             _userInput.value = ""
-            _selectedImageUri.value = null
+            _selectedImageUris.value = emptyList()
         }
     }
     
     /**
-     * Set selected image URI
+     * Add an image to the selected images list
      */
-    fun setSelectedImage(imageUri: String?) {
-        _selectedImageUri.value = imageUri
+    fun addImage(imageUri: String) {
+        _selectedImageUris.value = _selectedImageUris.value + imageUri
     }
-    
+
     /**
-     * Clear selected image
+     * Remove a specific image from the selected images list
      */
-    fun clearSelectedImage() {
-        _selectedImageUri.value = null
+    fun removeImage(imageUri: String) {
+        _selectedImageUris.value = _selectedImageUris.value.filter { it != imageUri }
     }
     
     /**
