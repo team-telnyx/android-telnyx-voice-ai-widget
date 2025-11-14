@@ -385,11 +385,13 @@ class WidgetViewModel : ViewModel() {
                 params?.widgetSettings?.let { widgetSettings ->
                     _widgetSettings.value = widgetSettings
                 }
-                
+
+                val hasImages = params?.item?.content?.any { it.type == "image_url" && it.imageUrl != null } ?: false
+
                 // Update agent status based on conversation type
                 params?.type?.let { type ->
                     val newAgentStatus = when (type) {
-                        "conversation.item.created" -> AgentStatus.Thinking
+                        "conversation.item.created" -> if (hasImages) AgentStatus.ProcessingImage else AgentStatus.Thinking
                         "response.text.delta", "response.created" -> AgentStatus.Waiting
                         "response.done", "response.text.done" -> AgentStatus.Idle
                         else -> null

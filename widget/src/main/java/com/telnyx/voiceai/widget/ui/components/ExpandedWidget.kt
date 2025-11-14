@@ -73,6 +73,7 @@ fun ExpandedWidget(
                     AgentStatus.Idle -> stringResource(R.string.default_agent_idle_text)
                     AgentStatus.Thinking -> if (settings.agentThinkingText?.isNullOrEmpty() == false) settings.agentThinkingText!! else stringResource(R.string.default_agent_thinking_text)
                     AgentStatus.Waiting -> if (settings.speakToInterruptText?.isNullOrEmpty() == false) settings.speakToInterruptText!! else stringResource(R.string.default_speak_to_interrupt_text)
+                    AgentStatus.ProcessingImage -> stringResource(R.string.default_processing_image_text)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

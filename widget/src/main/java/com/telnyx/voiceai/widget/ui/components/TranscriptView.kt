@@ -265,6 +265,7 @@ private fun ExpandedAudioSection(
                 AgentStatus.Idle -> stringResource(R.string.default_agent_idle_text)
                 AgentStatus.Thinking -> settings.agentThinkingText ?: stringResource(R.string.default_agent_thinking_text)
                 AgentStatus.Waiting -> settings.speakToInterruptText ?: stringResource(R.string.default_speak_to_interrupt_text)
+                AgentStatus.ProcessingImage -> stringResource(R.string.default_processing_image_text)
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,

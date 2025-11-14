@@ -77,7 +77,12 @@ enum class AgentStatus {
     /**
      * Agent is waiting and can be interrupted
      */
-    Waiting
+    Waiting,
+
+    /**
+     * Agent is processing an image
+     */
+    ProcessingImage
 }
 
 /**
