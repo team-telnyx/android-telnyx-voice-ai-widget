@@ -20,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
+import androidx.core.content.FileProvider
+import java.io.File
+import android.Manifest
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -560,6 +563,8 @@ private fun MessageInput(
         ) {
             // Image picker button
             var showImagePicker by remember { mutableStateOf(false) }
+            // Camera picker button
+            var showCameraPicker by remember { mutableStateOf(false) }
 
             IconButton(
                 onClick = { showImagePicker = true },
@@ -573,6 +578,23 @@ private fun MessageInput(
                 Icon(
                     imageVector = Icons.Default.Image,
                     contentDescription = "Add image",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Camera button
+            IconButton(
+                onClick = { showCameraPicker = true },
+                enabled = enabled,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Take photo",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -626,6 +648,17 @@ private fun MessageInput(
                     onDismiss = { showImagePicker = false }
                 )
             }
+
+            // Camera picker launcher
+            if (showCameraPicker) {
+                CameraPickerDialog(
+                    onImageCaptured = { uri ->
+                        onImageSelected(uri)
+                        showCameraPicker = false
+                    },
+                    onDismiss = { showCameraPicker = false }
+                )
+            }
         }
     }
 }
@@ -648,6 +681,48 @@ private fun ImagePickerDialog(
 
     LaunchedEffect(Unit) {
         launcher.launch("image/*")
+    }
+}
+
+@Composable
+private fun CameraPickerDialog(
+    onImageCaptured: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val photoUri = remember {
+        val photoFile = File(context.cacheDir, "photo_${System.currentTimeMillis()}.jpg")
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            photoFile
+        )
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            // Convert captured photo URI to base64 string
+            val base64Image = ImageUtils.uriToBase64(context, photoUri)
+            base64Image?.let { onImageCaptured(it) } ?: onDismiss()
+        } else {
+            onDismiss()
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraLauncher.launch(photoUri)
+        } else {
+            onDismiss()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 }
 
