@@ -48,6 +48,9 @@ class WidgetViewModel : ViewModel() {
     private val _userInput = MutableStateFlow("")
     val userInput: StateFlow<String> = _userInput.asStateFlow()
 
+    private val _selectedImageUris = MutableStateFlow<List<String>>(emptyList())
+    val selectedImageUris: StateFlow<List<String>> = _selectedImageUris.asStateFlow()
+
     private val _audioLevels = MutableStateFlow<MutableList<Float>>(emptyList<Float>().toMutableList())
     val audioLevels: StateFlow<List<Float>> = _audioLevels.asStateFlow()
 
@@ -83,7 +86,15 @@ class WidgetViewModel : ViewModel() {
                 }
 
                 telnyxClient.transcriptUpdateFlow.collect { transcript ->
-                    _transcriptItems.value = transcript.map { TranscriptItem(it.id, it.content, (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), it.timestamp.time) }
+                    _transcriptItems.value = transcript.map {
+                        TranscriptItem(
+                            id = it.id, 
+                            text = it.content, 
+                            isUser = (it.role == com.telnyx.webrtc.sdk.model.TranscriptItem.ROLE_USER), 
+                            timestamp = it.timestamp.time,
+                            images = it.images
+                        ) 
+                    }
                 }
 
 
@@ -209,16 +220,37 @@ class WidgetViewModel : ViewModel() {
     }
     
     /**
-     * Send user message
+     * Send user message with optional images
      */
     fun sendMessage() {
         val message = _userInput.value.trim()
-        if (message.isNotEmpty()) {
+        val imageUris = _selectedImageUris.value
+
+        if (message.isNotEmpty() || imageUris.isNotEmpty()) {
             viewModelScope.launch {
-                telnyxClient.sendAIAssistantMessage(message)
+                if (imageUris.isNotEmpty()) {
+                    telnyxClient.sendAIAssistantMessage(message, imageUris)
+                } else {
+                    telnyxClient.sendAIAssistantMessage(message)
+                }
             }
             _userInput.value = ""
+            _selectedImageUris.value = emptyList()
         }
+    }
+    
+    /**
+     * Add an image to the selected images list
+     */
+    fun addImage(imageUri: String) {
+        _selectedImageUris.value = _selectedImageUris.value + imageUri
+    }
+
+    /**
+     * Remove a specific image from the selected images list
+     */
+    fun removeImage(imageUri: String) {
+        _selectedImageUris.value = _selectedImageUris.value.filter { it != imageUri }
     }
     
     /**
@@ -353,11 +385,13 @@ class WidgetViewModel : ViewModel() {
                 params?.widgetSettings?.let { widgetSettings ->
                     _widgetSettings.value = widgetSettings
                 }
-                
+
+                val hasImages = params?.item?.content?.any { it.type == "image_url" && it.imageUrl != null } ?: false
+
                 // Update agent status based on conversation type
                 params?.type?.let { type ->
                     val newAgentStatus = when (type) {
-                        "conversation.item.created" -> AgentStatus.Thinking
+                        "conversation.item.created" -> if (hasImages) AgentStatus.ProcessingImage else AgentStatus.Thinking
                         "response.text.delta", "response.created" -> AgentStatus.Waiting
                         "response.done", "response.text.done" -> AgentStatus.Idle
                         else -> null

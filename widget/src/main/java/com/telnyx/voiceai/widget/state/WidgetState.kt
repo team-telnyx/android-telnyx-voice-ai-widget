@@ -77,7 +77,12 @@ enum class AgentStatus {
     /**
      * Agent is waiting and can be interrupted
      */
-    Waiting
+    Waiting,
+
+    /**
+     * Agent is processing an image
+     */
+    ProcessingImage
 }
 
 /**
@@ -87,7 +92,8 @@ data class TranscriptItem(
     val id: String,
     val text: String,
     val isUser: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val images: List<String>? = null
 )
 
 enum class ErrorType {
