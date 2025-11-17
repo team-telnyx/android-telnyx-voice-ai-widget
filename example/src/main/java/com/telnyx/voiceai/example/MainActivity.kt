@@ -34,7 +34,8 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExampleApp() {
-    var assistantId by remember { mutableStateOf("demo-assistant-id") }
+    val demoAssistantDefaultId = stringResource(R.string.demo_assistant_id_label)
+    var assistantId by remember { mutableStateOf(demoAssistantDefaultId) }
     var showAlertDialog by remember { mutableStateOf(false) }
     var showWidget by remember { mutableStateOf(false) }
     var iconOnly by remember { mutableStateOf(false) }

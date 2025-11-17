@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -12,7 +13,8 @@ import java.io.InputStream
  * Utility class for image processing and conversion
  */
 object ImageUtils {
-    
+
+    private const val COMPRESSION_QUALITY = 80
     /**
      * Convert image URI to base64 encoded string
      */
@@ -25,14 +27,14 @@ object ImageUtils {
                 val outputStream = ByteArrayOutputStream()
                 
                 // Compress as JPEG with 80% quality
-                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, outputStream)
                 val byteArray = outputStream.toByteArray()
                 
                 // Create data URL with base64 encoding
                 "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.d("ImageUtils", "Error converting image to base64: ${e.message}")
             null
         }
     }
@@ -56,7 +58,7 @@ object ImageUtils {
             // Convert byte array to Bitmap
             BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.d("ImageUtils", "Error converting image to base64: ${e.message}")
             null
         }
     }
