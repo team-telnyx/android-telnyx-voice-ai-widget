@@ -67,7 +67,6 @@ fun TranscriptView(
     selectedImageUris: List<String> = emptyList(),
     onImageSelected: (String) -> Unit = {},
     onImageRemoved: (String) -> Unit = {},
-    modifier: Modifier = Modifier,
     iconOnly: Boolean = false
 ) {
     Dialog(
