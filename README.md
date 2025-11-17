@@ -306,6 +306,108 @@ The widget automatically fetches configuration from your Telnyx Assistant settin
 - Audio visualizer settings
 - Status messages
 
+## Call Parameters
+
+You can add optional parameters by utilizing the 'CallParams' when initializing the widget. This is helpful for providing additional context to calls when referencing them via logs. Regardless of destinationNumber provided, the call will always be made to the assistant the widget was initialized with.
+
+In order to pass dynamic variables to your widget, such as a name or account number, custom headers can be used which are SIP headers that will be passed to the AI agent. Headers need to start with the 'X-' prefix.
+
+Once added, they will be mapped to dynamic variables in the AI assisntant (e.g., X-Account-Number becomes {{account_number}}).
+
+Note: Hyphens in header names are converted to underscores in variable names.
+
+[dynamic variables](https://developers.telnyx.com/docs/inference/ai-assistants/dynamic-variables)
+
+### CallParams Properties
+
+```kotlin
+data class CallParams(
+    val destinationNumber: String? = null,
+    val callerNumber: String? = null,
+    val callerName: String? = null,
+    val customHeaders: Map<String, String>? = null
+)
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `destinationNumber` | String? | Override the default destination number for the call |
+| `callerNumber` | String? | Set the caller number to display for the call |
+| `callerName` | String? | Set the caller name to display for the call |
+| `customHeaders` | Map<String, String>? | Additional custom headers to include with the call |
+
+### Usage Examples
+
+#### Basic Call Parameters
+
+```kotlin
+import com.telnyx.voiceai.widget.model.CallParams
+
+@Composable
+fun MyScreen() {
+    val callParams = CallParams(
+        callerName = "John Doe",
+        callerNumber = "+1234567890"
+    )
+    
+    AIAssistantWidget(
+        assistantId = "your-assistant-id",
+        callParams = callParams,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+```
+
+#### Advanced Configuration with Custom Headers
+
+```kotlin
+val callParams = CallParams(
+    callerName = "Customer Support",
+    callerNumber = "+1-800-SUPPORT",
+    destinationNumber = "custom-destination",
+    customHeaders = mapOf(
+        "X-User-ID" to "user123",
+        "X-Session-ID" to "session456",
+        "X-Custom-Header" to "custom-value"
+    )
+)
+
+AIAssistantWidget(
+    assistantId = "your-assistant-id",
+    callParams = callParams,
+    shouldInitialize = true
+)
+```
+
+#### Dynamic Call Parameters
+
+```kotlin
+@Composable
+fun DynamicCallWidget(userId: String, userName: String) {
+    val callParams = remember(userId, userName) {
+        CallParams(
+            callerName = userName,
+            callerNumber = "+1234567890",
+            customHeaders = mapOf(
+                "X-User-ID" to userId,
+                "X-Session-ID" to "session456",
+                "X-Custom-Header" to "custom-value"
+            )
+        )
+    }
+    
+    AIAssistantWidget(
+        assistantId = "your-assistant-id",
+        callParams = callParams
+    )
+}
+```
+
+### Important Notes
+
+- All `CallParams` properties are optional
+- Parameters are applied when a call is initiated, not during widget initialization
+
 ## Example App
 
 Check out the included example app in the `example` module for a complete implementation:

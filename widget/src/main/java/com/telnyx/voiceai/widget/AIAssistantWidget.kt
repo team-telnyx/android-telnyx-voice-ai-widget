@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.telnyx.voiceai.widget.model.CallParams
 import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.WidgetState
 import com.telnyx.voiceai.widget.ui.components.*
@@ -59,6 +60,11 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  * @param iconOnly When true, displays the widget as a floating action button with only the icon.
  *                In this mode, tapping starts the call and opens directly into the full screen
  *                text view. When false, displays the regular widget button with text.
+ * @param callParams Optional call parameters to add context to assistant calls. When provided,
+ *                  these params will be included in calls to the assistant to enhance logging and
+ *                  call referencing or to add dynamic variables to your assistant via custom headers.
+ *                  Note that all calls will always be made to the assistant provided via the assistant ID,
+ *                  regardless of parameters provided.
  * @param widgetButtonModifier Modifier applied to the widget button in collapsed state
  * @param expandedWidgetModifier Modifier applied to the expanded widget
  * @param buttonTextModifier Modifier applied to the text visible on the widget button
@@ -70,6 +76,7 @@ fun AIAssistantWidget(
     modifier: Modifier = Modifier,
     shouldInitialize: Boolean = true,
     iconOnly: Boolean = false,
+    callParams: CallParams? = null,
     widgetButtonModifier: Modifier = Modifier,
     expandedWidgetModifier: Modifier = Modifier,
     buttonTextModifier: Modifier = Modifier,
@@ -81,7 +88,7 @@ fun AIAssistantWidget(
     // Initialize the widget when shouldInitialize becomes true and assistantId is available
     LaunchedEffect(shouldInitialize) {
         if (shouldInitialize) {
-            viewModel.initialize(context, assistantId, iconOnly)
+            viewModel.initialize(context, assistantId, iconOnly, callParams)
         }
     }
 
@@ -213,7 +220,7 @@ fun AIAssistantWidget(
                         message = state.message,
                         type = state.type,
                         assistantId = assistantId,
-                        onRetry = { viewModel.initialize(context, assistantId, iconOnly) },
+                        onRetry = { viewModel.initialize(context, assistantId, iconOnly, callParams) },
                         modifier = modifier
                     )
                 }
@@ -236,7 +243,7 @@ fun AIAssistantWidget(
                     type = floatingButtonErrorState!!.type,
                     assistantId = assistantId,
                     onRetry = {
-                        viewModel.initialize(context, assistantId, iconOnly)
+                        viewModel.initialize(context, assistantId, iconOnly, callParams)
                         floatingButtonErrorState = null
                               },
                     modifier = modifier

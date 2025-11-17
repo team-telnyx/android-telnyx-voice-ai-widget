@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.telnyx.voiceai.widget.model.CallParams
 import com.telnyx.voiceai.widget.state.AgentStatus
 import com.telnyx.voiceai.widget.state.ErrorType
 import com.telnyx.voiceai.widget.state.TranscriptItem
@@ -35,6 +36,7 @@ class WidgetViewModel : ViewModel() {
     private val aiAssistantDestination = "ai-assistant"
 
     private var iconOnly: Boolean = false
+    private var callParams: CallParams? = null
 
     private val _widgetState = MutableStateFlow<WidgetState>(WidgetState.Idle)
     val widgetState: StateFlow<WidgetState> = _widgetState.asStateFlow()
@@ -62,8 +64,9 @@ class WidgetViewModel : ViewModel() {
     /**
      * Initialize the widget with assistant ID
      */
-    fun initialize(context: Context, assistantId: String, iconOnly: Boolean = false) {
+    fun initialize(context: Context, assistantId: String, iconOnly: Boolean = false, callParams: CallParams? = null) {
         this.iconOnly = iconOnly
+        this.callParams = callParams
         viewModelScope.launch {
             try {
                 _widgetState.value = WidgetState.Loading
@@ -104,11 +107,19 @@ class WidgetViewModel : ViewModel() {
             
             viewModelScope.launch {
                 try {
+                    // Use callParams if provided, otherwise use defaults
+                    val callerName = callParams?.callerName ?: ""
+                    val callerNumber = callParams?.callerNumber ?: ""
+                    val destinationNumber = callParams?.destinationNumber ?: aiAssistantDestination
+                    val clientState = "" // Keep empty for now, could be extended later
+                    
+                    // For now, customHeaders are stored but not used in the call creation
+                    
                     currentCall = telnyxClient.newInvite(
-                        "",
-                        "",
-                        aiAssistantDestination,
-                        "",
+                        callerName,
+                        callerNumber,
+                        destinationNumber,
+                        clientState,
                         debug = true
                     )
 
@@ -248,12 +259,12 @@ class WidgetViewModel : ViewModel() {
         val data = response.data
         when (data?.method) {
             SocketMethod.CLIENT_READY.methodName -> handleClientReady()
-            SocketMethod.LOGIN.methodName -> handleLogin(data)
-            SocketMethod.INVITE.methodName -> handleInvite(data)
-            SocketMethod.ANSWER.methodName -> handleAnswer(data)
-            SocketMethod.RINGING.methodName -> handleRinging(data)
+            SocketMethod.LOGIN.methodName -> handleLogin()
+            SocketMethod.INVITE.methodName -> handleInvite()
+            SocketMethod.ANSWER.methodName -> handleAnswer()
+            SocketMethod.RINGING.methodName -> handleRinging()
             SocketMethod.MEDIA.methodName -> handleMedia()
-            SocketMethod.BYE.methodName -> handleBye(data)
+            SocketMethod.BYE.methodName -> handleBye()
             SocketMethod.AI_CONVERSATION.methodName -> handleAiConversation(data)
         }
     }
@@ -291,15 +302,15 @@ class WidgetViewModel : ViewModel() {
         _widgetState.value = WidgetState.Collapsed(_widgetSettings.value)
     }
     
-    private fun handleLogin(data: ReceivedMessageBody) {
+    private fun handleLogin() {
         Log.d("AiAssistantWidget", "Login received")
     }
     
-    private fun handleInvite(data: ReceivedMessageBody) {
+    private fun handleInvite() {
         Log.d("AiAssistantWidget", "Invite received")
     }
     
-    private fun handleAnswer(data: ReceivedMessageBody) {
+    private fun handleAnswer() {
         Log.d("AiAssistantWidget", "Answer received")
         isConnected = true
         val currentState = _widgetState.value
@@ -324,7 +335,7 @@ class WidgetViewModel : ViewModel() {
         }
     }
     
-    private fun handleRinging(data: ReceivedMessageBody) {
+    private fun handleRinging() {
         Log.d("AiAssistantWidget", "Ringing received")
     }
     
@@ -332,7 +343,7 @@ class WidgetViewModel : ViewModel() {
         Log.d("AiAssistantWidget", "Media received")
     }
     
-    private fun handleBye(data: ReceivedMessageBody) {
+    private fun handleBye() {
         Log.d("AiAssistantWidget", "Bye received")
         isConnected = false
         val currentState = _widgetState.value
