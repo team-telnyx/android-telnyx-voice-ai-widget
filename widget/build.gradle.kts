@@ -118,14 +118,14 @@ publishing {
                 name.set("Telnyx Android Voice AI Widget")
                 description.set("A standalone Android widget for Telnyx Voice AI Assistant integration")
                 url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
-                
+
                 licenses {
                     license {
                         name.set("MIT License")
                         url.set("https://opensource.org/licenses/MIT")
                     }
                 }
-                
+
                 developers {
                     developer {
                         id.set("telnyx")
@@ -133,7 +133,7 @@ publishing {
                         email.set("support@telnyx.com")
                     }
                 }
-                
+
                 scm {
                     connection.set("scm:git:git://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
                     developerConnection.set("scm:git:ssh://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
@@ -142,13 +142,34 @@ publishing {
             }
         }
     }
+
+    repositories {
+        maven {
+            name = "Central"
+            url = uri(layout.buildDirectory.dir("maven-central-publish"))
+        }
+    }
 }
 
 signing {
-    useInMemoryPgpKeys(
-        System.getenv("SIGNING_KEY_ID"),
-        System.getenv("GPG_KEY_CONTENTS"),
-        System.getenv("SIGNING_PASSWORD")
-    )
+    val signingPassword = System.getenv("SIGNING_PASSWORD")
+
+    // Use GPG command (works with keys imported by actions/setup-java)
+    if (System.getenv("CI") == "true") {
+        useGpgCmd()
+        // Configure GPG to use the passphrase from environment
+        if (signingPassword != null) {
+            extra["signing.gnupg.keyName"] = System.getenv("SIGNING_KEY_ID") ?: ""
+            extra["signing.gnupg.passphrase"] = signingPassword
+        }
+    } else {
+        // Local development: use in-memory keys if available
+        val signingKeyId = System.getenv("SIGNING_KEY_ID")
+        val signingKey = System.getenv("GPG_KEY_CONTENTS")
+
+        if (signingKeyId != null && signingKey != null && signingPassword != null) {
+            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        }
+    }
     sign(publishing.publications)
 }

@@ -98,6 +98,7 @@ complexity:
   ComplexMethod:
     active: true
     threshold: 15
+    ignoreAnnotated: ['Composable']
     ignoreSingleWhenExpression: false
     ignoreSimpleWhenEntries: false
     ignoreNestingFunctions: false
@@ -127,6 +128,7 @@ complexity:
     ignoreDefaultParameters: true
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
+    ignoreAnnotated: ['Composable']
   MethodOverloading:
     active: false
     threshold: 6
@@ -246,6 +248,7 @@ exceptions:
     ignoreLabeled: false
   SwallowedException:
     active: true
+    excludes: ['**/test/**', '**/androidTest/**']
     ignoredExceptionTypes:
       - 'InterruptedException'
       - 'MalformedURLException'

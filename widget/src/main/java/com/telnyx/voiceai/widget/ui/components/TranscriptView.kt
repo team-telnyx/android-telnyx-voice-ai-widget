@@ -556,7 +556,7 @@ private fun MessageInput(
                 }
             }
         }
-        
+
         // Input row
         Row(
             verticalAlignment = Alignment.Bottom,
@@ -621,7 +621,7 @@ private fun MessageInput(
                     disabledContainerColor = backgroundColor
                 )
             )
-            
+
             // Send button
             IconButton(
                 onClick = onSend,
@@ -638,7 +638,7 @@ private fun MessageInput(
                     tint = Color.White
                 )
             }
-            
+
             // Image picker launcher
             if (showImagePicker) {
                 ImagePickerDialog(
@@ -728,6 +728,7 @@ private fun CameraPickerDialog(
 }
 
 @Preview
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun TranscriptViewPreview() {
     val sampleTranscript = listOf(
@@ -765,6 +766,7 @@ private fun TranscriptViewPreview() {
 }
 
 @Preview
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun TranscriptViewDarkPreview() {
     val sampleTranscript = listOf(
