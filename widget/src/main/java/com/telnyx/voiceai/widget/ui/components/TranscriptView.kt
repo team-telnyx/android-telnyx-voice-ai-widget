@@ -354,118 +354,123 @@ private fun TranscriptMessage(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Message card
-            Card(
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
+            // Column containing images above and message card below
+            Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    // Display images if present
-                    item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items(imageUrls) { imageUrl ->
-                                val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
-                                imagePreview?.let {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(it)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Message image",
-                                        modifier = Modifier
-                                            .wrapContentWidth()
-                                            .heightIn(max = 90.dp)
-                                            .clip(RoundedCornerShape(8.dp)),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                }
+                // Display images if present (above the chat bubble, no background)
+                item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(imageUrls) { imageUrl ->
+                            val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
+                            imagePreview?.let {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(it)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Message image",
+                                    modifier = Modifier
+                                        .wrapContentWidth()
+                                        .heightIn(max = 90.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Fit
+                                )
                             }
-                        }
-
-                        if (item.text.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
 
-                    // Display text if present
-                    if (item.text.isNotEmpty()) {
-                        Text(
-                            text = item.text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Message card (only contains text)
+                if (item.text.isNotEmpty()) {
+                    Card(
+                        shape = RoundedCornerShape(
+                            topStart = 16.dp,
+                            topEnd = 16.dp,
+                            bottomStart = 16.dp,
+                            bottomEnd = 16.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = item.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
         } else {
             // User message with avatar on right
-            // Message card
-            Card(
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier
-                    .weight(1f)
+            // Column containing images above and message card below
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.End
             ) {
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    // Display images if present
-                    item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items(imageUrls) { imageUrl ->
-                                val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
-                                imagePreview?.let {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(it)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Image attached",
-                                        modifier = Modifier
-                                            .wrapContentWidth()
-                                            .heightIn(max = 90.dp)
-                                            .clip(RoundedCornerShape(8.dp)),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                }
+                // Display images if present (above the chat bubble, no background)
+                item.images?.takeIf { it.isNotEmpty() }?.let { imageUrls ->
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.wrapContentWidth(),
+                        reverseLayout = true
+                    ) {
+                        items(imageUrls) { imageUrl ->
+                            val imagePreview = remember(imageUrl) { ImageUtils.base64ToBitmap(imageUrl) }
+                            imagePreview?.let {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(it)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Image attached",
+                                    modifier = Modifier
+                                        .wrapContentWidth()
+                                        .heightIn(max = 90.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Fit
+                                )
                             }
-                        }
-
-                        if (item.text.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
 
-                    // Display text if present
-                    if (item.text.isNotEmpty()) {
-                        Text(
-                            text = item.text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Message card (only contains text)
+                if (item.text.isNotEmpty()) {
+                    Card(
+                        shape = RoundedCornerShape(
+                            topStart = 16.dp,
+                            topEnd = 16.dp,
+                            bottomStart = 16.dp,
+                            bottomEnd = 16.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.wrapContentWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = item.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }
