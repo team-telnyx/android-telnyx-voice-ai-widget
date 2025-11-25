@@ -1,9 +1,12 @@
 package com.telnyx.voiceai.example
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,11 +14,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.telnyx.voiceai.example.ui.theme.VoiceAIWidgetExampleTheme
 import com.telnyx.voiceai.widget.AIAssistantWidget
 import com.telnyx.voiceai.widget.model.CallParams
@@ -35,12 +40,25 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExampleApp() {
+    val context = LocalContext.current
     val demoAssistantDefaultId = stringResource(R.string.demo_assistant_id_label)
     var assistantId by remember { mutableStateOf(demoAssistantDefaultId) }
     var showAlertDialog by remember { mutableStateOf(false) }
+    var showPermissionDeniedDialog by remember { mutableStateOf(false) }
     var showWidget by remember { mutableStateOf(false) }
     var iconOnly by remember { mutableStateOf(false) }
-    
+
+    // Permission launcher for RECORD_AUDIO
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showWidget = true
+        } else {
+            showPermissionDeniedDialog = true
+        }
+    }
+
     // Example CallParams - you can customize these values
     val callParams = remember {
         CallParams(
@@ -138,7 +156,17 @@ fun ExampleApp() {
                     if (assistantId.trim().isEmpty()) {
                         showAlertDialog = true
                     } else {
-                        showWidget = true
+                        // Check if RECORD_AUDIO permission is granted
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                        if (hasPermission) {
+                            showWidget = true
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
                     }
                 },
                 modifier = Modifier
@@ -199,7 +227,7 @@ fun ExampleApp() {
             Spacer(modifier = Modifier.height(32.dp))
         }
         
-        // Alert Dialog
+        // Alert Dialog for empty assistant ID
         if (showAlertDialog) {
             AlertDialog(
                 onDismissRequest = { showAlertDialog = false },
@@ -212,6 +240,37 @@ fun ExampleApp() {
                         onClick = { showAlertDialog = false }
                     ) {
                         Text(stringResource(R.string.alert_ok_button))
+                    }
+                }
+            )
+        }
+
+        // Alert Dialog for permission denied
+        if (showPermissionDeniedDialog) {
+            AlertDialog(
+                onDismissRequest = { showPermissionDeniedDialog = false },
+                title = {
+                    Text(text = "Permission Required")
+                },
+                text = {
+                    Text(text = "Microphone permission is required to use the voice AI assistant. Please grant the permission to continue.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showPermissionDeniedDialog = false
+                            // Try requesting permission again
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    ) {
+                        Text("Grant Permission")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showPermissionDeniedDialog = false }
+                    ) {
+                        Text("Cancel")
                     }
                 }
             )
