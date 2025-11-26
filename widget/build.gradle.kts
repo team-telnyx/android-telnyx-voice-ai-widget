@@ -75,7 +75,7 @@ dependencies {
     implementation("com.github.team-telnyx:telnyx-webrtc-android:3.3.0")
     
     // Image loading
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     
     // JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
