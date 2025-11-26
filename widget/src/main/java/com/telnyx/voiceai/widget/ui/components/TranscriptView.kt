@@ -152,6 +152,7 @@ private fun TranscriptDialogContent(
                     // Overflow menu on the left
                     OverflowMenu(
                         settings = settings,
+                        onEndCall = onEndCall,
                         modifier = Modifier.size(42.dp)
                     )
                     
@@ -750,16 +751,24 @@ private fun CameraPickerDialog(
 @Composable
 private fun OverflowMenu(
     settings: WidgetSettings,
+    onEndCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<Pair<String, String>?>(null) } // Pair of (title, url)
     val context = LocalContext.current
-    
+
+    // Capture string resources at composable level
+    val endCallAndGiveFeedback = stringResource(R.string.end_call_and_give_feedback)
+    val endCallAndViewHistory = stringResource(R.string.end_call_and_view_history)
+    val endCallAndReportIssue = stringResource(R.string.end_call_and_report_issue)
+
     // Check if any URLs are available
     val hasGiveFeedback = !settings.giveFeedbackUrl.isNullOrEmpty()
     val hasReportIssue = !settings.reportIssueUrl.isNullOrEmpty()
     val hasViewHistory = !settings.viewHistoryUrl.isNullOrEmpty()
-    
+
     // Only show the menu if at least one URL is available
     if (hasGiveFeedback || hasReportIssue || hasViewHistory) {
         Box(modifier = modifier) {
@@ -773,11 +782,11 @@ private fun OverflowMenu(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
+                    contentDescription = stringResource(R.string.more_options_description),
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
-            
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -792,11 +801,11 @@ private fun OverflowMenu(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ThumbUp,
-                                    contentDescription = "Give Feedback",
+                                    contentDescription = stringResource(R.string.give_feedback),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Give Feedback",
+                                    text = stringResource(R.string.give_feedback),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -804,12 +813,13 @@ private fun OverflowMenu(
                         onClick = {
                             expanded = false
                             settings.giveFeedbackUrl?.let { url ->
-                                openUrl(context, url)
+                                pendingAction = Pair(endCallAndGiveFeedback, url)
+                                showConfirmDialog = true
                             }
                         }
                     )
                 }
-                
+
                 // View History menu item
                 if (hasViewHistory) {
                     DropdownMenuItem(
@@ -820,11 +830,11 @@ private fun OverflowMenu(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.History,
-                                    contentDescription = "View History",
+                                    contentDescription = stringResource(R.string.view_history),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "View History",
+                                    text = stringResource(R.string.view_history),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -832,12 +842,13 @@ private fun OverflowMenu(
                         onClick = {
                             expanded = false
                             settings.viewHistoryUrl?.let { url ->
-                                openUrl(context, url)
+                                pendingAction = Pair(endCallAndViewHistory, url)
+                                showConfirmDialog = true
                             }
                         }
                     )
                 }
-                
+
                 // Report Issue menu item
                 if (hasReportIssue) {
                     DropdownMenuItem(
@@ -848,11 +859,11 @@ private fun OverflowMenu(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
-                                    contentDescription = "Report Issue",
+                                    contentDescription = stringResource(R.string.report_issue),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Report Issue",
+                                    text = stringResource(R.string.report_issue),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -860,11 +871,50 @@ private fun OverflowMenu(
                         onClick = {
                             expanded = false
                             settings.reportIssueUrl?.let { url ->
-                                openUrl(context, url)
+                                pendingAction = Pair(endCallAndReportIssue, url)
+                                showConfirmDialog = true
                             }
                         }
                     )
                 }
+            }
+
+            // Confirmation dialog
+            if (showConfirmDialog && pendingAction != null) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showConfirmDialog = false
+                        pendingAction = null
+                    },
+                    title = {
+                        Text(text = pendingAction!!.first)
+                    },
+                    text = {
+                        Text(text = stringResource(R.string.end_call_confirmation_message))
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmDialog = false
+                                onEndCall()
+                                openUrl(context, pendingAction!!.second)
+                                pendingAction = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.ok_button))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmDialog = false
+                                pendingAction = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.close_button))
+                        }
+                    }
+                )
             }
         }
     }
