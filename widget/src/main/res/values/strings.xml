@@ -10,6 +10,7 @@
     <string name="default_agent_idle_text"></string>
     <string name="default_agent_thinking_text">Agent is thinking…</string>
     <string name="default_speak_to_interrupt_text">Speak to interrupt</string>
+    <string name="default_processing_image_text">Processing image...</string>
     
     <!-- Controls -->
     <string name="mute_button_description">Mute</string>
