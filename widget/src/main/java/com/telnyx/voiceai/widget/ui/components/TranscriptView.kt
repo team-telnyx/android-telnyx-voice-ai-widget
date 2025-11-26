@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -134,27 +137,40 @@ private fun TranscriptDialogContent(
             .fillMaxSize()
             .background(transcriptColors.topSectionColor)
     ) {
-        // Close button in top right (only show in regular mode)
+        // Top buttons (only show in regular mode)
         if (!iconOnly) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                contentAlignment = Alignment.TopEnd
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                IconButton(
-                    onClick = onCollapse,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.collapse_button_description),
-                        tint = MaterialTheme.colorScheme.onSurface
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Overflow menu on the left
+                    OverflowMenu(
+                        settings = settings,
+                        modifier = Modifier.size(42.dp)
                     )
+                    
+                    // Close button on the right
+                    IconButton(
+                        onClick = onCollapse,
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.collapse_button_description),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
@@ -731,6 +747,139 @@ private fun CameraPickerDialog(
     }
 }
 
+@Composable
+private fun OverflowMenu(
+    settings: WidgetSettings,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    
+    // Check if any URLs are available
+    val hasGiveFeedback = !settings.giveFeedbackUrl.isNullOrEmpty()
+    val hasReportIssue = !settings.reportIssueUrl.isNullOrEmpty()
+    val hasViewHistory = !settings.viewHistoryUrl.isNullOrEmpty()
+    
+    // Only show the menu if at least one URL is available
+    if (hasGiveFeedback || hasReportIssue || hasViewHistory) {
+        Box(modifier = modifier) {
+            IconButton(
+                onClick = { expanded = true },
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More options",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // Give Feedback menu item
+                if (hasGiveFeedback) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ThumbUp,
+                                    contentDescription = "Give Feedback",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Give Feedback",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.giveFeedbackUrl?.let { url ->
+                                openUrl(context, url)
+                            }
+                        }
+                    )
+                }
+                
+                // View History menu item
+                if (hasViewHistory) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = "View History",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "View History",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.viewHistoryUrl?.let { url ->
+                                openUrl(context, url)
+                            }
+                        }
+                    )
+                }
+                
+                // Report Issue menu item
+                if (hasReportIssue) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "Report Issue",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Report Issue",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.reportIssueUrl?.let { url ->
+                                openUrl(context, url)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun openUrl(context: android.content.Context, url: String) {
+    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        // Handle case where no app can handle the intent
+        android.util.Log.e("TranscriptView", "Failed to open URL: $url", e)
+    }
+}
+
 @Preview
 @Suppress("UnusedPrivateMember")
 @Composable
@@ -744,7 +893,10 @@ private fun TranscriptViewPreview() {
 
     val sampleSettings = WidgetSettings(
         agentThinkingText = "AI is thinking...",
-        speakToInterruptText = "Speak to interrupt"
+        speakToInterruptText = "Speak to interrupt",
+        giveFeedbackUrl = "https://example.com/feedback",
+        reportIssueUrl = "https://example.com/report",
+        viewHistoryUrl = "https://example.com/history"
     )
 
     VoiceAIWidgetTheme(darkTheme = false) {
@@ -782,7 +934,10 @@ private fun TranscriptViewDarkPreview() {
 
     val sampleSettings = WidgetSettings(
         agentThinkingText = "AI is thinking...",
-        speakToInterruptText = "Speak to interrupt"
+        speakToInterruptText = "Speak to interrupt",
+        giveFeedbackUrl = "https://example.com/feedback",
+        reportIssueUrl = "https://example.com/report",
+        viewHistoryUrl = "https://example.com/history"
     )
 
     VoiceAIWidgetTheme(darkTheme = true) {
