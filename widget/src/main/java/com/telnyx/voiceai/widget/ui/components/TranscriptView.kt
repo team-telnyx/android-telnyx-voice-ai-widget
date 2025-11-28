@@ -26,6 +26,10 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
 import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -48,6 +52,7 @@ import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.voiceai.widget.ui.theme.LocalTranscriptColors
 import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
 import com.telnyx.voiceai.widget.utils.ImageUtils
+import com.telnyx.voiceai.widget.utils.UrlUtils
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
@@ -896,8 +901,9 @@ private fun OverflowMenu(
                         TextButton(
                             onClick = {
                                 showConfirmDialog = false
-                                onEndCall()
-                                openUrl(context, pendingAction!!.second)
+                                if (openUrl(context, pendingAction!!.second))
+                                    onEndCall()
+
                                 pendingAction = null
                             }
                         ) {
@@ -920,14 +926,31 @@ private fun OverflowMenu(
     }
 }
 
-private fun openUrl(context: android.content.Context, url: String) {
-    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-    try {
-        context.startActivity(intent)
-    } catch (e: Exception) {
-        // Handle case where no app can handle the intent
-        android.util.Log.e("TranscriptView", "Failed to open URL: $url", e)
+private fun openUrl(context: Context, url: String): Boolean {
+    var errorMessage: String? = null
+    // Validate URL
+    if (!UrlUtils.isValidUrl(url)) {
+        errorMessage = context.getString(R.string.error_invalid_url)
+        Log.e("TranscriptView", "Invalid URL: $url")
+    } else {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Handle case where no app can handle the intent
+            errorMessage = context.getString(R.string.error_no_app_to_open_url)
+            Log.e("TranscriptView", "Failed to open URL: $url", e)
+        }
     }
+
+    return errorMessage?.let {
+        Toast.makeText(
+            context,
+            it,
+            Toast.LENGTH_SHORT
+        ).show()
+        false
+    } ?: true
 }
 
 @Preview
