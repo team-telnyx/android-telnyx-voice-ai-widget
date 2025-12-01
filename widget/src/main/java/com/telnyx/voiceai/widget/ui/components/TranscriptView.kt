@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +26,10 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
 import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -45,6 +52,7 @@ import com.telnyx.voiceai.widget.state.TranscriptItem
 import com.telnyx.voiceai.widget.ui.theme.LocalTranscriptColors
 import com.telnyx.voiceai.widget.ui.theme.VoiceAIWidgetTheme
 import com.telnyx.voiceai.widget.utils.ImageUtils
+import com.telnyx.voiceai.widget.utils.UrlUtils
 import com.telnyx.webrtc.sdk.model.WidgetSettings
 
 /**
@@ -134,27 +142,41 @@ private fun TranscriptDialogContent(
             .fillMaxSize()
             .background(transcriptColors.topSectionColor)
     ) {
-        // Close button in top right (only show in regular mode)
+        // Top buttons (only show in regular mode)
         if (!iconOnly) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                contentAlignment = Alignment.TopEnd
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                IconButton(
-                    onClick = onCollapse,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.collapse_button_description),
-                        tint = MaterialTheme.colorScheme.onSurface
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Overflow menu on the left
+                    OverflowMenu(
+                        settings = settings,
+                        onEndCall = onEndCall,
+                        modifier = Modifier.size(42.dp)
                     )
+                    
+                    // Close button on the right
+                    IconButton(
+                        onClick = onCollapse,
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.collapse_button_description),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
@@ -731,6 +753,206 @@ private fun CameraPickerDialog(
     }
 }
 
+@Composable
+private fun OverflowMenu(
+    settings: WidgetSettings,
+    onEndCall: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<Pair<String, String>?>(null) } // Pair of (title, url)
+    val context = LocalContext.current
+
+    // Capture string resources at composable level
+    val endCallAndGiveFeedback = stringResource(R.string.end_call_and_give_feedback)
+    val endCallAndViewHistory = stringResource(R.string.end_call_and_view_history)
+    val endCallAndReportIssue = stringResource(R.string.end_call_and_report_issue)
+
+    // Check if any URLs are available
+    val hasGiveFeedback = !settings.giveFeedbackUrl.isNullOrEmpty()
+    val hasReportIssue = !settings.reportIssueUrl.isNullOrEmpty()
+    val hasViewHistory = !settings.viewHistoryUrl.isNullOrEmpty()
+
+    // Only show the menu if at least one URL is available
+    if (hasGiveFeedback || hasReportIssue || hasViewHistory) {
+        Box(modifier = modifier) {
+            IconButton(
+                onClick = { expanded = true },
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.more_options_description),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // Give Feedback menu item
+                if (hasGiveFeedback) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ThumbUp,
+                                    contentDescription = stringResource(R.string.give_feedback),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.give_feedback),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.giveFeedbackUrl?.let { url ->
+                                pendingAction = Pair(endCallAndGiveFeedback, url)
+                                showConfirmDialog = true
+                            }
+                        }
+                    )
+                }
+
+                // View History menu item
+                if (hasViewHistory) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = stringResource(R.string.view_history),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.view_history),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.viewHistoryUrl?.let { url ->
+                                pendingAction = Pair(endCallAndViewHistory, url)
+                                showConfirmDialog = true
+                            }
+                        }
+                    )
+                }
+
+                // Report Issue menu item
+                if (hasReportIssue) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = stringResource(R.string.report_issue),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = stringResource(R.string.report_issue),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            settings.reportIssueUrl?.let { url ->
+                                pendingAction = Pair(endCallAndReportIssue, url)
+                                showConfirmDialog = true
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Confirmation dialog
+            if (showConfirmDialog && pendingAction != null) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showConfirmDialog = false
+                        pendingAction = null
+                    },
+                    title = {
+                        Text(text = pendingAction!!.first)
+                    },
+                    text = {
+                        Text(text = stringResource(R.string.end_call_confirmation_message))
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmDialog = false
+                                if (openUrl(context, pendingAction!!.second))
+                                    onEndCall()
+
+                                pendingAction = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.ok_button))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmDialog = false
+                                pendingAction = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.close_button))
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun openUrl(context: Context, url: String): Boolean {
+    var errorMessage: String? = null
+    // Validate URL
+    if (!UrlUtils.isValidUrl(url)) {
+        errorMessage = context.getString(R.string.error_invalid_url)
+        Log.e("TranscriptView", "Invalid URL: $url")
+    } else {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Handle case where no app can handle the intent
+            errorMessage = context.getString(R.string.error_no_app_to_open_url)
+            Log.e("TranscriptView", "Failed to open URL: $url", e)
+        }
+    }
+
+    return errorMessage?.let {
+        Toast.makeText(
+            context,
+            it,
+            Toast.LENGTH_SHORT
+        ).show()
+        false
+    } ?: true
+}
+
 @Preview
 @Suppress("UnusedPrivateMember")
 @Composable
@@ -744,7 +966,10 @@ private fun TranscriptViewPreview() {
 
     val sampleSettings = WidgetSettings(
         agentThinkingText = "AI is thinking...",
-        speakToInterruptText = "Speak to interrupt"
+        speakToInterruptText = "Speak to interrupt",
+        giveFeedbackUrl = "https://example.com/feedback",
+        reportIssueUrl = "https://example.com/report",
+        viewHistoryUrl = "https://example.com/history"
     )
 
     VoiceAIWidgetTheme(darkTheme = false) {
@@ -782,7 +1007,10 @@ private fun TranscriptViewDarkPreview() {
 
     val sampleSettings = WidgetSettings(
         agentThinkingText = "AI is thinking...",
-        speakToInterruptText = "Speak to interrupt"
+        speakToInterruptText = "Speak to interrupt",
+        giveFeedbackUrl = "https://example.com/feedback",
+        reportIssueUrl = "https://example.com/report",
+        viewHistoryUrl = "https://example.com/history"
     )
 
     VoiceAIWidgetTheme(darkTheme = true) {

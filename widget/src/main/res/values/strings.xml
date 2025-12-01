@@ -18,6 +18,20 @@
     <string name="end_call_button_description">End Call</string>
     <string name="collapse_button_description">Collapse</string>
     <string name="send_button_description">Send</string>
+    <string name="more_options_description">More options</string>
+
+    <!-- Overflow Menu -->
+    <string name="give_feedback">Give Feedback</string>
+    <string name="view_history">View History</string>
+    <string name="report_issue">Report Issue</string>
+
+    <!-- Overflow Menu Confirmation Dialog -->
+    <string name="end_call_and_give_feedback">End call and give feedback</string>
+    <string name="end_call_and_view_history">End call and view history</string>
+    <string name="end_call_and_report_issue">End call and report issue</string>
+    <string name="end_call_confirmation_message">This will end your current call. Do you want to continue?</string>
+    <string name="close_button">Close</string>
+    <string name="ok_button">OK</string>
 
     <!-- Transcript View -->
     <string name="conversation_title">Conversation</string>
