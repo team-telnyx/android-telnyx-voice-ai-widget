@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/team-telnyx/android-telnyx-voice-ai-widget/releases/tag/1.1.0) (2025-12-02)
+
+### Enhancement
+- Allow for image upload in conversation view
+- Show URL menu in conversation view
+
 ## [1.0.0](https://github.com/team-telnyx/android-telnyx-voice-ai-widget/releases/tag/1.0.0) (2025-10-29)
 
 ### Enhancement
