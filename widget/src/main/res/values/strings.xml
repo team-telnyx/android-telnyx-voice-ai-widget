@@ -33,6 +33,10 @@
     <string name="close_button">Close</string>
     <string name="ok_button">OK</string>
 
+    <!-- URL Error Messages -->
+    <string name="error_invalid_url">Invalid URL</string>
+    <string name="error_no_app_to_open_url">No app available to open this link</string>
+
     <!-- Transcript View -->
     <string name="conversation_title">Conversation</string>
     
