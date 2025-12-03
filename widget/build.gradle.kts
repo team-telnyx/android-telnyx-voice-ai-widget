@@ -90,7 +90,7 @@ dependencies {
 }
 
 // Maven publishing configuration
-val libraryVersion = "1.0.0"
+val libraryVersion = "1.1.0"
 val libraryGroupId = "com.telnyx"
 val libraryArtifactId = "android-voice-ai-widget"
 
