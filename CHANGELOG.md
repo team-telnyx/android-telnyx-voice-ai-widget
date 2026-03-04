@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Enhancement
+- Add `conversationId` parameter to `CallParams` to allow joining existing conversations (WEBRTC-3327)
+
 ## [1.1.0](https://github.com/team-telnyx/android-telnyx-voice-ai-widget/releases/tag/1.1.0) (2025-12-02)
 
 ### Enhancement

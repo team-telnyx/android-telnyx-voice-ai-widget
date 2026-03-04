@@ -10,10 +10,14 @@ package com.telnyx.voiceai.widget.model
  * @param callerNumber The caller number to display for the call. If provided, overrides the default caller number.
  * @param callerName The caller name to display for the call. If provided, overrides the default caller name.
  * @param customHeaders Additional custom headers to include with the call. These will be merged with any existing headers.
+ * @param conversationId The conversation ID to join an existing conversation. If provided, the widget will
+ *                       attempt to join the specified conversation during anonymous login. This enables
+ *                       users to resume or participate in ongoing AI assistant conversations.
  */
 data class CallParams(
     val destinationNumber: String? = null,
     val callerNumber: String? = null,
     val callerName: String? = null,
-    val customHeaders: Map<String, String>? = null
+    val customHeaders: Map<String, String>? = null,
+    val conversationId: String? = null
 )
