@@ -18,7 +18,7 @@ Add the widget library to your Android project:
 
 ```kotlin
 dependencies {
-    implementation("com.telnyx:android-voice-ai-widget:1.1.0")
+    implementation("com.telnyx:android-voice-ai-widget:1.2.0")
 }
 ```
 
