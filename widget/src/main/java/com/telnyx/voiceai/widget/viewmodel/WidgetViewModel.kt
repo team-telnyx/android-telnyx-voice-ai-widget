@@ -78,7 +78,8 @@ class WidgetViewModel : ViewModel() {
 
                 telnyxClient.connectAnonymously(
                     targetId = assistantId,
-                    logLevel = LogLevel.ALL
+                    logLevel = LogLevel.ALL,
+                    conversationId = callParams?.conversationId
                 )
                 
                 // Start observing socket responses

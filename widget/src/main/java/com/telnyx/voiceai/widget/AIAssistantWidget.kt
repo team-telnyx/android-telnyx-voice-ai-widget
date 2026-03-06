@@ -63,6 +63,7 @@ import com.telnyx.voiceai.widget.viewmodel.WidgetViewModel
  * @param callParams Optional call parameters to add context to assistant calls. When provided,
  *                  these params will be included in calls to the assistant to enhance logging and
  *                  call referencing or to add dynamic variables to your assistant via custom headers.
+ *                  You can also provide a conversationId to join an existing conversation.
  *                  Note that all calls will always be made to the assistant provided via the assistant ID,
  *                  regardless of parameters provided.
  * @param widgetButtonModifier Modifier applied to the widget button in collapsed state
