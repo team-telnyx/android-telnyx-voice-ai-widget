@@ -72,8 +72,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
     // Telnyx WebRTC SDK
-    // Using feature branch until WEBRTC-3319 is released
-    implementation("com.github.team-telnyx:telnyx-webrtc-android:feature-WEBRTC-3319-add-conversation-id-to-anonymous-login-SNAPSHOT")
+    implementation("com.github.team-telnyx:telnyx-webrtc-android:3.4.0")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
