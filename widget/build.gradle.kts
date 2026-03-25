@@ -72,7 +72,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
     // Telnyx WebRTC SDK
-    implementation("com.github.team-telnyx:telnyx-webrtc-android:3.4.1")
+    implementation("com.github.team-telnyx:telnyx-webrtc-android:3.5.0")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

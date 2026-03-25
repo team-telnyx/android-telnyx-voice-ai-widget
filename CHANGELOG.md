@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Dependency Updates
+- Bump `telnyx-webrtc-android` from `3.4.1` to `3.5.0`
+  - Adds automatic call stats reporting and JSON export
+  - Adds ICE candidate pair details, transport stats, and audio level metrics
+  - Adds SDK latency measurement for call establishment
+  - Adds `telnyx_call_control_id` handling in answer for Call Control integration
+  - Fixes `clientState` truncation for payloads exceeding 57 bytes
+  - Fixes potential SIGSEGV crash in stats timer after PeerConnection teardown
+
 ## [1.2.0](https://github.com/team-telnyx/android-telnyx-voice-ai-widget/releases/tag/1.2.0) (2026-03-06)
 
 ### Enhancement
