@@ -14,23 +14,23 @@ A drop-in Android widget library for integrating Telnyx AI Assistant functionali
 
 ## Installation
 
-Add the widget library to your Android project:
-
-```kotlin
-dependencies {
-    implementation("com.telnyx:android-voice-ai-widget:1.2.0")
-}
-```
-
-### Maven Central
-
-This library is published to Maven Central. Make sure you have `mavenCentral()` in your repositories:
+Add the JitPack repository to your project's `settings.gradle.kts` (or root `build.gradle.kts`):
 
 ```kotlin
 repositories {
-    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 ```
+
+Then add the widget library to your module's `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("com.github.team-telnyx:android-telnyx-voice-ai-widget:VERSION")
+}
+```
+
+Replace `VERSION` with the desired release tag (e.g., `1.2.0`).
 
 ## Quick Start
 
@@ -454,9 +454,11 @@ The widget is built using:
 
 ### Publishing
 
-The project includes automated publishing to Maven Central via GitHub Actions. Publishing is triggered on:
-- New releases
-- Manual workflow dispatch
+This library is published via [JitPack](https://jitpack.io). New versions are automatically available when you create a GitHub release or tag.
+
+To publish a new version:
+1. Create and push a new tag (e.g., `git tag 1.3.0 && git push origin 1.3.0`)
+2. JitPack will automatically build and publish the library
 
 ### CI/CD
 
@@ -464,7 +466,7 @@ This project includes:
 - **Automated Testing**: Unit tests and lint checks on every PR
 - **Static Analysis**: Semgrep security scanning
 - **Dependency Management**: Dependabot for automated dependency updates
-- **Maven Publishing**: Automated publishing to Maven Central
+- **JitPack Publishing**: Automatic publishing on new tags/releases
 
 ## Contributing
 
