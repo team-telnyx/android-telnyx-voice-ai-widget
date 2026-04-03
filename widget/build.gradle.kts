@@ -5,7 +5,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("maven-publish")
-    id("signing")
 }
 
 android {
@@ -51,6 +50,13 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -89,87 +95,16 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
-// Maven publishing configuration
-val libraryVersion = "1.2.0"
-val libraryGroupId = "com.telnyx"
-val libraryArtifactId = "android-voice-ai-widget"
-
-android {
+// JitPack publishing configuration
+afterEvaluate {
     publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
-}
-
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            groupId = libraryGroupId
-            artifactId = libraryArtifactId
-            version = libraryVersion
-
-            afterEvaluate {
+        publications {
+            create<MavenPublication>("release") {
                 from(components["release"])
-            }
-
-            pom {
-                name.set("Telnyx Android Voice AI Widget")
-                description.set("A standalone Android widget for Telnyx Voice AI Assistant integration")
-                url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
-
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("telnyx")
-                        name.set("Telnyx Team")
-                        email.set("support@telnyx.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
-                    developerConnection.set("scm:git:ssh://github.com/team-telnyx/android-telnyx-voice-ai-widget.git")
-                    url.set("https://github.com/team-telnyx/android-telnyx-voice-ai-widget")
-                }
+                groupId = "com.github.team-telnyx"
+                artifactId = "android-telnyx-voice-ai-widget"
+                version = findProperty("VERSION")?.toString() ?: "unspecified"
             }
         }
     }
-
-    repositories {
-        maven {
-            name = "Central"
-            url = uri(layout.buildDirectory.dir("maven-central-publish"))
-        }
-    }
-}
-
-signing {
-    val signingPassword = System.getenv("SIGNING_PASSWORD")
-
-    // Use GPG command (works with keys imported by actions/setup-java)
-    if (System.getenv("CI") == "true") {
-        useGpgCmd()
-        // Configure GPG to use the passphrase from environment
-        if (signingPassword != null) {
-            extra["signing.gnupg.keyName"] = System.getenv("SIGNING_KEY_ID") ?: ""
-            extra["signing.gnupg.passphrase"] = signingPassword
-        }
-    } else {
-        // Local development: use in-memory keys if available
-        val signingKeyId = System.getenv("SIGNING_KEY_ID")
-        val signingKey = System.getenv("GPG_KEY_CONTENTS")
-
-        if (signingKeyId != null && signingKey != null && signingPassword != null) {
-            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-        }
-    }
-    sign(publishing.publications)
 }
