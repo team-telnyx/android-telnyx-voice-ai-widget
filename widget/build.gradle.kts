@@ -103,6 +103,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.team-telnyx"
                 artifactId = "android-telnyx-voice-ai-widget"
+                version = findProperty("VERSION")?.toString() ?: "unspecified"
             }
         }
     }
